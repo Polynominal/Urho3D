@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2008-2018 the Urho3D project.
+// Copyright (c) 2008-2019 the Urho3D project.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -20,41 +20,28 @@
 // THE SOFTWARE.
 //
 
-import org.gradle.api.Project
-import org.gradle.kotlin.dsl.DependencyHandlerScope
-import org.gradle.kotlin.dsl.dependencies
-import org.gradle.kotlin.dsl.kotlin
-import org.gradle.kotlin.dsl.project
+import org.gradle.kotlin.dsl.embeddedKotlinVersion
+import org.gradle.plugin.use.PluginDependenciesSpec
+import org.gradle.plugin.use.PluginDependencySpec
 import java.io.File
 
-const val androidToolsVersion = "3.2.0-beta04"
-const val kotlinVersion = "1.2.61"
+val kotlinVersion = embeddedKotlinVersion
+
+const val androidToolsVersion = "3.5.0-alpha13"
+const val bintrayVersion = "1.8.4"
+const val cmakeVersion = "3.10.2"
 const val junitVersion = "4.12"
-const val testRunnerVersion = "1.0.2"
 const val testEspressoVersion = "3.0.2"
+const val testRunnerVersion = "1.0.2"
 
 /**
- * Prepare the module as Android Application with Urho3D AAR dependency.
+ * Apply Urho3D custom plugin for the given platform.
+ *
+ * Current supported platforms: android.
  */
 @Suppress("unused")
-fun Project.urhoAndroidModule() {
-    dependencies {
-        "implementation"(fileTree(mapOf("dir" to "libs", "include" to listOf("*.jar"))))
-        "implementation"(project(":android:urho3d-lib"))
-        kotlinAndroidDependencies()
-    }
-}
-
-/**
- * Add default dependencies for Android/Kotlin module.
- */
-@Suppress("unused")
-fun DependencyHandlerScope.kotlinAndroidDependencies() {
-    "implementation"(kotlin("stdlib-jdk8", kotlinVersion))
-    "testImplementation"("junit:junit:$junitVersion")
-    "androidTestImplementation"("com.android.support.test:runner:$testRunnerVersion")
-    "androidTestImplementation"("com.android.support.test.espresso:espresso-core:$testEspressoVersion")
-}
+fun PluginDependenciesSpec.urho3d(platform: String): PluginDependencySpec =
+        id("com.github.urho3d.$platform")
 
 /**
  * Naive implementation of "touch" command.

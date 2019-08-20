@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2008-2018 the Urho3D project.
+// Copyright (c) 2008-2019 the Urho3D project.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -506,6 +506,7 @@ void Sample2D::CreateBackgroundSprite(TileMapInfo2D info, float scale, const Str
     sprite->SetSprite(cache->GetResource<Sprite2D>(texture));
     SetRandomSeed(Time::GetSystemTime()); // Randomize from system clock
     sprite->SetColor(Color(Random(0.0f, 1.0f), Random(0.0f, 1.0f), Random(0.0f, 1.0f), 1.0f));
+    sprite->SetLayer(-99);
 
     // Create rotation animation
     if (animate)

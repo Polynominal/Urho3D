@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2008-2018 the Urho3D project.
+// Copyright (c) 2008-2019 the Urho3D project.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -20,24 +20,24 @@
 // THE SOFTWARE.
 //
 
-// See https://docs.gradle.org/current/userguide/publishing_maven.html#publishing_maven:deferred_configuration
-enableFeaturePreview("STABLE_PUBLISHING")
-
 pluginManagement {
+    resolutionStrategy {
+        eachPlugin {
+            when {
+                requested.id.id.startsWith("com.android.") ->
+                    useModule("com.android.tools.build:gradle:$androidToolsVersion")
+                requested.id.id.startsWith("org.jetbrains.kotlin.") ->
+                    useVersion(kotlinVersion)
+                requested.id.id == "com.jfrog.bintray" ->
+                    useVersion(bintrayVersion)
+            }
+        }
+    }
     repositories {
+        @Suppress("UnstableApiUsage")
         gradlePluginPortal()
         google()
         jcenter()
-    }
-    resolutionStrategy {
-        eachPlugin {
-            if (requested.id.id.startsWith("com.android.")) {
-                useModule("com.android.tools.build:gradle:$androidToolsVersion")
-            }
-            if (requested.id.id.startsWith("org.jetbrains.kotlin.")) {
-                useVersion(kotlinVersion)
-            }
-        }
     }
 }
 
