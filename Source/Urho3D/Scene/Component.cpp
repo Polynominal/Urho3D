@@ -269,7 +269,7 @@ Component* Component::GetComponent(StringHash type) const
 
 bool Component::IsEnabledEffective() const
 {
-    return enabled_ && node_ && node_->IsEnabled();
+    return enabled_ && node_ && node_->IsEnabledExclusive();
 }
 
 void Component::GetComponents(PODVector<Component*>& dest, StringHash type) const

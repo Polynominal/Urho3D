@@ -362,7 +362,12 @@ public:
 
     /// Return whether is enabled. Disables nodes effectively disable all their components.
     bool IsEnabled() const { return enabled_; }
-
+    
+    
+    /// Return whether self and parent is enabled recursively, if any node in the parent list is disabled will return false
+    bool IsEnabledExclusive();
+    void RefreshEnabledExclusive();
+    
     /// Return the node's last own enabled state. May be different than the value returned by IsEnabled when SetDeepEnabled has been used.
     bool IsEnabledSelf() const { return enabledPrev_; }
 

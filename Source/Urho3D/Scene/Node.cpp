@@ -1984,6 +1984,44 @@ Animatable* Node::FindAttributeAnimationTarget(const String& name, String& outNa
     }
 }
 
+bool Node::IsEnabledExclusive()
+{
+    if (parent_ == scene_ || !parent_)
+    {
+        return enabled_;
+    }
+    else
+    {
+        return enabled_ and parent_->IsEnabledExclusive();
+    }
+}
+
+void Node::RefreshEnabledExclusive()
+{
+
+    for (Vector<SharedPtr<Component> >::Iterator i = components_.Begin(); i != components_.End(); ++i)
+    {
+        (*i)->OnSetEnabled();
+
+        // Send change event for the component
+        if (scene_)
+        {
+            using namespace ComponentEnabledChanged;
+
+            VariantMap& eventData = GetEventDataMap();
+            eventData[P_SCENE] = scene_;
+            eventData[P_NODE] = this;
+            eventData[P_COMPONENT] = (*i);
+
+            scene_->SendEvent(E_COMPONENTENABLEDCHANGED, eventData);
+        }
+    }
+    
+    for (Vector<SharedPtr<Node> >::Iterator i = children_.Begin(); i != children_.End(); ++i)
+    {
+        (*i)->RefreshEnabledExclusive();
+    }
+}
 void Node::SetEnabled(bool enable, bool recursive, bool storeSelf)
 {
     // The enabled state of the whole scene can not be changed. SetUpdateEnabled() is used instead to start/stop updates.
@@ -2025,24 +2063,7 @@ void Node::SetEnabled(bool enable, bool recursive, bool storeSelf)
 
             scene_->SendEvent(E_NODEENABLEDCHANGED, eventData);
         }
-
-        for (Vector<SharedPtr<Component> >::Iterator i = components_.Begin(); i != components_.End(); ++i)
-        {
-            (*i)->OnSetEnabled();
-
-            // Send change event for the component
-            if (scene_)
-            {
-                using namespace ComponentEnabledChanged;
-
-                VariantMap& eventData = GetEventDataMap();
-                eventData[P_SCENE] = scene_;
-                eventData[P_NODE] = this;
-                eventData[P_COMPONENT] = (*i);
-
-                scene_->SendEvent(E_COMPONENTENABLEDCHANGED, eventData);
-            }
-        }
+        RefreshEnabledExclusive();
     }
 
     if (recursive)
