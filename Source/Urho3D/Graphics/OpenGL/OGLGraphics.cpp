@@ -87,7 +87,7 @@ static const unsigned glCmpFunc[] =
     GL_GREATER,
     GL_GEQUAL
 };
-
+//GL_SRC_ALPHA ->  GL_ONE_MINUS_SRC_ALPHA
 static const unsigned glSrcBlend[] =
 {
     GL_ONE,
@@ -501,7 +501,7 @@ bool Graphics::SetMode(int width, int height, bool fullscreen, bool borderless, 
 
 #ifdef URHO3D_LOGGING
     URHO3D_LOGINFOF("Adapter used %s %s", (const char *) glGetString(GL_VENDOR), (const char *) glGetString(GL_RENDERER));
-    
+
     String msg;
     msg.AppendWithFormat("Set screen mode %dx%d %s monitor %d", width_, height_, (fullscreen_ ? "fullscreen" : "windowed"), monitor_);
     if (borderless_)
@@ -1776,7 +1776,7 @@ void Graphics::SetBlendMode(BlendMode mode, bool alphaToCoverage)
         else
         {
             glEnable(GL_BLEND);
-            glBlendFunc(glSrcBlend[mode], glDestBlend[mode]);
+            glBlendFuncSeperate(glSrcBlend[mode], glDestBlend[mode], GL_ONE, GL_ONE);
             glBlendEquation(glBlendOp[mode]);
         }
 
