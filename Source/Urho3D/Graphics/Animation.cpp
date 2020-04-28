@@ -119,6 +119,14 @@ void Animation::RegisterObject(Context* context)
     context->RegisterFactory<Animation>();
 }
 
+void Animation::SetKeyFrameCountForTrack(AnimationTrack* track,unsigned newSize)
+{
+    track->keyFrames_.Resize(newSize);
+}
+void Animation::CommitKeyframeChange()
+{
+    SetMemoryUse(GetMemoryUse());
+}
 bool Animation::BeginLoad(Deserializer& source)
 {
     unsigned memoryUse = sizeof(Animation);

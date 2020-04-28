@@ -521,4 +521,15 @@ const Variant& RenderPath::GetShaderParameter(const String& name) const
     return Variant::EMPTY;
 }
 
+RenderPathCommand* RenderPath::GetCommand(const String& tagName)
+{
+    for (unsigned i = 0; i < commands_.Size(); ++i)
+    {
+        RenderPathCommand* command = &commands_[i];
+        if (!command->tag_.Compare(tagName, false))
+            return command;
+    }
+    return nullptr;
+}
+
 }

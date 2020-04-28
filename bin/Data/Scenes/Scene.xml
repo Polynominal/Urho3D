@@ -1,0 +1,24 @@
+<?xml version="1.0" ?>
+<scene id="1">
+	<component id="1" type="Octree" />
+	<component id="2" type="DebugRenderer" />
+	<component id="3" type="Light">
+		<attribute name="Light Type" value="Directional" />
+	</component>
+	<node id="1">
+		<attribute name="Is Enabled" value="true" />
+		<attribute name="Name" value="Scene" />
+		<attribute name="Tags" />
+		<attribute name="Variables" />
+		<node id="2">
+			<attribute name="Is Enabled" value="true" />
+			<attribute name="Name" value="plane_uv_ui" />
+			<attribute name="Tags" />
+			<attribute name="Variables" />
+			<component id="4" type="StaticModel">
+				<attribute name="Model" value="Model;Models/plane_uv_ui.mdl" />
+				<attribute name="Material" value="Material;" />
+			</component>
+		</node>
+	</node>
+</scene>

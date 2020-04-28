@@ -1,0 +1,64 @@
+
+
+
+
+$using namespace Urho3D;
+$#include "Graphics/ProceduralSky.h"
+
+class ProceduralSky: public Component {
+
+ProceduralSky(Context* context);
+virtual ~ProceduralSky();
+static void RegisterObject(Context* context);
+void OnNodeSet(Node* node);
+
+void SetUpdateAuto(bool updateAuto);
+void SetUpdateInterval(float interval);
+bool SetRenderSize(unsigned size);
+void Update();
+
+bool GetUpdateAuto();
+float GetUpdateInterval();
+float GetUpdateWait();
+unsigned GetRenderSize();
+bool Bind(RenderPath* rPath, Camera* camera);
+
+
+
+void SetAbsorptionProfile(Vector3 absorptionProfile);
+void SetRayleighBrightness(float rayleighBrightness);
+void SetMieBrightness(float mieBrightness);
+void SetSpotBrightness(float spotBrightness);
+void SetScatterStrength(float scatterStrength);
+void SetRayleighStrength(float rayleighStrength);
+void SetMieStrength(float mieStrength);
+void SetRayleighCollectionPower(float rayleighCollectionPower);
+void SetMieCollectionPower(float mieCollectionPower);
+void SetMieDistribution(float mieDistribution);
+void ApplyAllShaderVariables();
+
+Vector3 GetAbsorptionProfile();
+float GetRayleighBrightness();
+float GetMieBrightness();
+float GetSpotBrightness();
+float GetScatterStrength();
+float GetRayleighStrength();
+float GetMieStrength();
+float GetRayleighCollectionPower();
+float GetMieCollectionPower();
+float GetMieDistribution();
+
+
+public:
+  /// Atmospheric parameters.
+  tolua_property__get_set Vector3 absorptionProfile; // Absorption profile of air.
+  tolua_property__get_set float rayleighBrightness;
+  tolua_property__get_set float mieBrightness;
+  tolua_property__get_set float spotBrightness;
+  tolua_property__get_set float scatterStrength;
+  tolua_property__get_set float rayleighStrength;
+  tolua_property__get_set float mieStrength;
+  tolua_property__get_set float rayleighCollectionPower;
+  tolua_property__get_set float mieCollectionPower;
+  tolua_property__get_set float mieDistribution;
+};

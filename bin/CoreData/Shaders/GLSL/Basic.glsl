@@ -9,12 +9,16 @@
     varying vec4 vColor;
 #endif
 
+#ifdef COMPILEPS
+uniform float cAlphaDiscardRange=0.5;
+#endif
+
 void VS()
 {
     mat4 modelMatrix = iModelMatrix;
     vec3 worldPos = GetWorldPos(modelMatrix);
     gl_Position = GetClipPos(worldPos);
-    
+
     #ifdef DIFFMAP
         vTexCoord = iTexCoord;
     #endif
@@ -37,7 +41,7 @@ void PS()
     #ifdef DIFFMAP
         vec4 diffInput = texture2D(sDiffMap, vTexCoord);
         #ifdef ALPHAMASK
-            if (diffInput.a < 0.5)
+            if (diffInput.a < cAlphaDiscardRange)
                 discard;
         #endif
         gl_FragColor = diffColor * diffInput;

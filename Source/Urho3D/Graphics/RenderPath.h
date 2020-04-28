@@ -205,6 +205,7 @@ public:
     bool IsEnabled(const String& tag) const;
     /// Return true if renderpath or command with given tag exists.
     bool IsAdded(const String& tag) const;
+
     /// Toggle enabled state of commands and rendertargets by tag.
     void ToggleEnabled(const String& tag);
     /// Assign rendertarget at index.
@@ -238,7 +239,8 @@ public:
 
     /// Return command at index, or null if does not exist.
     RenderPathCommand* GetCommand(unsigned index) { return index < commands_.Size() ? &commands_[index] : nullptr; }
-
+    /// Return command by name
+    RenderPathCommand* GetCommand(const String& tagName);
     /// Return a shader parameter (first appearance in any command.)
     const Variant& GetShaderParameter(const String& name) const;
 

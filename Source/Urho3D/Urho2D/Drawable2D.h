@@ -92,6 +92,9 @@ public:
     /// Return order in layer.
     int GetOrderInLayer() const { return orderInLayer_; }
 
+    /// Return draw order by layer and order in layer.
+    int GetRenderOrder() const { return layer_ << 16u | orderInLayer_; }
+
     /// Return all source batches (called by Renderer2D).
     const Vector<SourceBatch2D>& GetSourceBatches();
 

@@ -24,8 +24,12 @@ class AnimationState
     void SetLayer(unsigned char layer);
     void SetBlendMode(AnimationBlendMode mode);
     void Apply();
-    
+
     Animation* GetAnimation() const;
+    AnimatedModel* GetModel() const;
+    /// Return root scene node this state controls (node hierarchy mode.)
+    Node* GetNode() const;
+
     Bone* GetStartBone() const;
     float GetBoneWeight(const String name) const;
     float GetBoneWeight(StringHash nameHash) const;

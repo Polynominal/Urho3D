@@ -10,6 +10,10 @@ varying vec4 vWorldPos;
     varying vec4 vColor;
 #endif
 
+#ifdef COMPILEPS
+uniform float cAlphaDiscardRange=0.5;
+#endif
+
 void VS()
 {
     mat4 modelMatrix = iModelMatrix;
@@ -30,7 +34,7 @@ void PS()
     #ifdef DIFFMAP
         vec4 diffColor = cMatDiffColor * texture2D(sDiffMap, vTexCoord);
         #ifdef ALPHAMASK
-            if (diffColor.a < 0.5)
+            if (diffColor.a < cAlphaDiscardRange)
                 discard;
         #endif
     #else

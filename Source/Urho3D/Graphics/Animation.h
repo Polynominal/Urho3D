@@ -154,6 +154,9 @@ public:
     /// Clone the animation.
     SharedPtr<Animation> Clone(const String& cloneName = String::EMPTY) const;
 
+    void SetKeyFrameCountForTrack(AnimationTrack* track,unsigned newSize);
+    void CommitKeyframeChange();
+
     /// Return animation name.
     const String& GetAnimationName() const { return animationName_; }
 

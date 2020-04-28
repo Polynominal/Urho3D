@@ -44,6 +44,7 @@
 #include "../Graphics/Technique.h"
 #include "../Graphics/Terrain.h"
 #include "../Graphics/TerrainPatch.h"
+#include "../Graphics/ProceduralSky.h"
 #ifdef _WIN32
 #include "../Graphics/Texture2D.h"
 #endif
@@ -412,6 +413,7 @@ void RegisterGraphicsLibrary(Context* context)
     Camera::RegisterObject(context);
     Drawable::RegisterObject(context);
     Light::RegisterObject(context);
+    ProceduralSky::RegisterObject(context);
     StaticModel::RegisterObject(context);
     StaticModelGroup::RegisterObject(context);
     Skybox::RegisterObject(context);

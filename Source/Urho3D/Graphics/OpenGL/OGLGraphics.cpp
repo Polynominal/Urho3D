@@ -1776,7 +1776,7 @@ void Graphics::SetBlendMode(BlendMode mode, bool alphaToCoverage)
         else
         {
             glEnable(GL_BLEND);
-            glBlendFuncSeperate(glSrcBlend[mode], glDestBlend[mode], GL_ONE, GL_ONE);
+            glBlendFuncSeparate(glSrcBlend[mode], glDestBlend[mode], GL_ONE, GL_ONE);
             glBlendEquation(glBlendOp[mode]);
         }
 
