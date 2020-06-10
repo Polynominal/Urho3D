@@ -22,10 +22,10 @@
 
 #include "../Precompiled.h"
 
-#ifndef _WIN32
+//#ifndef _WIN32
 #include "../Graphics/IndexBuffer.h"
 #include "../Graphics/VertexBuffer.h"
-#endif
+//#endif
 #include "../IO/VectorBuffer.h"
 
 #include <toluapp/tolua++.h>
@@ -83,8 +83,7 @@ template <> void* ToluaToVector<String>(lua_State* L, int narg, void* /*def*/)
     }
     return &result;
 }
-
-template <> int ToluaPushVector<String>(lua_State* L, void* data, const char* /*type*/)
+template <> int ToluaPushVector<String>(lua_State* L, void* data, const char* type/*type*/)
 {
     lua_newtable(L);
     const Vector<String>& vector = *static_cast<const Vector<String>*>(data);

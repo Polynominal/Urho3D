@@ -23,10 +23,10 @@
 #pragma once
 
 #include "../Core/Context.h"
-#ifdef _WIN32
+//#ifdef _WIN32
 #include "../Graphics/IndexBuffer.h"
 #include "../Graphics/VertexBuffer.h"
-#endif
+//#endif
 
 struct lua_State;
 
@@ -179,7 +179,7 @@ template <typename T> int ToluaPushPODVector(double /*overload*/, lua_State* L, 
 //   both compilers are able to avoid the multiple definitions of template instantiation symbol during linking by using weak symbol
 // MSVC and MinGW, however, follow the standard strictly, hence we need to declare all the explicit template specializations below
 //   to keep these two compilers happy
-#ifdef _WIN32
+//#ifdef _WIN32
 template <> int ToluaIsVector<String>(lua_State* L, int lo, const char* type, int def, tolua_Error* err);
 template <> void* ToluaToVector<String>(lua_State* L, int narg, void* def);
 template <> int ToluaPushVector<String>(lua_State* L, void* data, const char* type);
@@ -190,7 +190,7 @@ template <> int ToluaPushPODVector<bool>(double /*overload*/, lua_State* L, void
 
 template <> void* ToluaToVector<SharedPtr<IndexBuffer> >(lua_State* L, int narg, void* def);
 template <> void* ToluaToVector<SharedPtr<VertexBuffer> >(lua_State* L, int narg, void* def);
-#endif
+//#endif
 
 /// Convert object at the given index and store it in Variant. This function is not thread-safe.
 void ToluaToVariant(lua_State* L, int narg, void* def, Variant& variant);

@@ -21,7 +21,6 @@
 //
 
 #include <Urho3D/LibraryInfo.h>
-#include <iostream>
 
 using namespace Urho3D;
 

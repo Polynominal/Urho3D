@@ -3,6 +3,7 @@
 #include "Transform.glsl"
 #include "ScreenPos.glsl"
 #include "Fog.glsl"
+#include "AlphaMask.glsl"
 
 varying vec2 vTexCoord;
 varying vec4 vWorldPos;
@@ -10,9 +11,6 @@ varying vec4 vWorldPos;
     varying vec4 vColor;
 #endif
 
-#ifdef COMPILEPS
-uniform float cAlphaDiscardRange=0.5;
-#endif
 
 void VS()
 {
@@ -34,7 +32,7 @@ void PS()
     #ifdef DIFFMAP
         vec4 diffColor = cMatDiffColor * texture2D(sDiffMap, vTexCoord);
         #ifdef ALPHAMASK
-            if (diffColor.a < cAlphaDiscardRange)
+            if (DiscardUsingAlphaMask(diffColor.a))
                 discard;
         #endif
     #else

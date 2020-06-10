@@ -1,16 +1,13 @@
 #include "Uniforms.glsl"
 #include "Samplers.glsl"
 #include "Transform.glsl"
+#include "AlphaMask.glsl"
 
 #if defined(DIFFMAP) || defined(ALPHAMAP)
     varying vec2 vTexCoord;
 #endif
 #ifdef VERTEXCOLOR
     varying vec4 vColor;
-#endif
-
-#ifdef COMPILEPS
-uniform float cAlphaDiscardRange=0.5;
 #endif
 
 void VS()
@@ -41,7 +38,7 @@ void PS()
     #ifdef DIFFMAP
         vec4 diffInput = texture2D(sDiffMap, vTexCoord);
         #ifdef ALPHAMASK
-            if (diffInput.a < cAlphaDiscardRange)
+            if (DiscardUsingAlphaMask(diffInput.a))
                 discard;
         #endif
         gl_FragColor = diffColor * diffInput;
