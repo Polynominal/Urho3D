@@ -1,5 +1,6 @@
 #ifdef COMPILEVS
 
+
 // Silence GLSL 150 deprecation warnings
 #ifdef GL3
 #define attribute in

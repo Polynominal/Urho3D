@@ -31,6 +31,10 @@ void PS()
     // Get material diffuse albedo
     #ifdef DIFFMAP
         vec4 diffColor = cMatDiffColor * texture2D(sDiffMap, vTexCoord);
+        #ifdef ALPHAMAP
+            vec4 stencil = texture2D(sEnvMap, vTexCoord);
+            diffColor.a = cMatDiffColor.a*stencil.a;
+        #endif
         #ifdef ALPHAMASK
             if (DiscardUsingAlphaMask(diffColor.a))
                 discard;

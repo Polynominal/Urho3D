@@ -7,4 +7,5 @@
     <pass name="deferred" vsdefines="NORMALMAP" psdefines="DEFERRED NORMALMAP" />
     <pass name="depth" vs="Depth" ps="Depth" psexcludes="PACKEDNORMAL" />
     <pass name="shadow" vs="Shadow" ps="Shadow" psexcludes="PACKEDNORMAL" />
+    <pass name="view_normal" vs="ReadableNormal" ps="ReadableNormal" />
 </technique>
