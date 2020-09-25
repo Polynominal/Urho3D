@@ -14,6 +14,7 @@ generated/
 /Source/Urho3D/tolua++-prefix/
 build/
 build_release/
+build_rel_debug/
 build_release_crosscompile/
 build_debug/
 build_windows/

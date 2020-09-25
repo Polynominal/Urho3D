@@ -49,6 +49,9 @@ public:
     void SetViewport(unsigned index, Viewport* viewport);
     /// Set viewport update mode. Default is to update when visible.
     void SetUpdateMode(RenderSurfaceUpdateMode mode);
+
+    /// setup a viewport backup so LUA created viewports dont freak out when releasing references
+    void SetViewportBackup(bool hasBackup);
     /// Set linked color rendertarget.
     void SetLinkedRenderTarget(RenderSurface* renderTarget);
     /// Set linked depth-stencil surface.
@@ -146,6 +149,8 @@ private:
 
     /// Viewports.
     Vector<SharedPtr<Viewport> > viewports_;
+    ///Viewports copy for memory safety from Lua
+    Vector<SharedPtr<Viewport>>  backupViewports_;
     /// Linked color buffer.
     WeakPtr<RenderSurface> linkedRenderTarget_;
     /// Linked depth buffer.

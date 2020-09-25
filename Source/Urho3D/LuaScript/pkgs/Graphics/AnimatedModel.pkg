@@ -40,4 +40,37 @@ class AnimatedModel : public StaticModel
     tolua_property__get_set bool updateInvisible;
     tolua_readonly tolua_property__get_set unsigned numMorphs;
     tolua_readonly tolua_property__is_set bool master;
+
+
+    void SetDrawDistance(float distance);
+    void SetShadowDistance(float distance);
+    void SetLodBias(float bias);
+    void SetViewMask(unsigned mask);
+    void SetLightMask(unsigned mask);
+    void SetShadowMask(unsigned mask);
+    void SetZoneMask(unsigned mask);
+    void SetMaxLights(unsigned num);
+    void SetCastShadows(bool enable);
+    void SetOccluder(bool enable);
+    void SetOccludee(bool enable);
+    void MarkForUpdate();
+
+    const BoundingBox& GetBoundingBox() const;
+    const BoundingBox& GetWorldBoundingBox();
+    unsigned char GetDrawableFlags() const;
+    float GetDrawDistance() const;
+    float GetShadowDistance() const;
+    float GetLodBias() const;
+    unsigned GetViewMask() const;
+    unsigned GetLightMask() const;
+    unsigned GetShadowMask() const;
+    unsigned GetZoneMask() const;
+    unsigned GetMaxLights() const;
+    bool GetCastShadows() const;
+    bool IsOccluder() const;
+    bool IsOccludee() const;
+    bool IsInView() const;
+    bool IsInView(Camera*) const;
+
+    Zone* GetZone() const;
 };

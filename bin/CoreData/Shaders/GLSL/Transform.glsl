@@ -224,8 +224,12 @@ vec4 GetWorldTangent(mat4 modelMatrix)
 
 #endif
 
-out vec4 fragData[MRT_COUNT];
 
+#ifdef MRT1
+out vec4 fragData[2];
+#else
+out vec4 fragData[MRT_COUNT];
+#endif
 
 #define gl_FragColor fragData[0]
 #define gl_FragData fragData

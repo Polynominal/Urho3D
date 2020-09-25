@@ -81,7 +81,7 @@ public:
   void SetMieCollectionPower(float mieCollectionPower)           {mieCollectionPower_       = mieCollectionPower;      if(rPath_){rPath_->SetShaderParameter("MieCollectionPower", mieCollectionPower_);}           };
   void SetMieDistribution(float mieDistribution)                 {mieDistribution_          = mieDistribution;         if(rPath_){rPath_->SetShaderParameter("MieDistribution", mieDistribution_);}                 };
   void ApplyAllShaderVariables();
-  
+
   Vector3 GetAbsorptionProfile()             {return absorptionProfile_;                           }; // Absorption profile of air.
   float GetRayleighBrightness()              {return rayleighBrightness_;                          };
   float GetMieBrightness()                   {return mieBrightness_;                               };
@@ -103,6 +103,7 @@ protected:
   void DumpTexture(Texture2D* texture, const String& filePath);
 
 protected:
+
   /// Camera used for face projections.
   Camera* cam_;
   /// Urho3D Skybox with geometry and main TextureCube.
@@ -123,6 +124,7 @@ protected:
 public:
   /// Atmospheric parameters.
   Vector3 absorptionProfile_; // Absorption profile of air.
+  Urho3D::Matrix4 InvProj_{1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, -1.0f, 1.0f};
   float rayleighBrightness_;
   float mieBrightness_;
   float spotBrightness_;

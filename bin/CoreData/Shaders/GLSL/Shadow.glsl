@@ -1,6 +1,7 @@
 #include "Uniforms.glsl"
 #include "Samplers.glsl"
 #include "Transform.glsl"
+#include "AlphaMask.glsl"
 
 #ifdef VSM_SHADOW
     varying vec4 vTexCoord;
@@ -23,8 +24,8 @@ void VS()
 void PS()
 {
     #ifdef ALPHAMASK
-        float alpha = texture2D(sDiffMap, vTexCoord.xy).a;
-        if (alpha < 0.5)
+        vec4 diffColor = texture2D(sDiffMap, vTexCoord.xy);
+        if (DiscardUsingAlphaMask(diffColor.a))
             discard;
     #endif
 

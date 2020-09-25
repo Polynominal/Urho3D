@@ -64,6 +64,11 @@ void PS()
         gl_FragData[2] = vec4(0.5, 0.5, 0.5, 1.0);
         gl_FragData[3] = vec4(EncodeDepth(vWorldPos.w), 0.0);
     #else
-        gl_FragColor = vec4(GetFog(diffColor.rgb, fogFactor), diffColor.a);
+        #ifndef MRT1
+            gl_FragColor = vec4(GetFog(diffColor.rgb, fogFactor), diffColor.a);
+        #else
+            gl_FragData[0] = vec4(GetFog(diffColor.rgb, fogFactor), diffColor.a);
+            gl_FragData[1] = diffColor;
+        #endif
     #endif
 }

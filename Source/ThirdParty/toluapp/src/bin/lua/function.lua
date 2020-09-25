@@ -573,5 +573,3 @@ function strip_defaults(s)
 
 	return "("..ret..")"
 end
-
-

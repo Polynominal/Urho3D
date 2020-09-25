@@ -138,11 +138,14 @@ void PS()
     #endif
 
     // Get fog factor
-    #ifdef HEIGHTFOG
-        float fogFactor = GetHeightFogFactor(vWorldPos.w, vWorldPos.y);
-    #else
-        float fogFactor = GetFogFactor(vWorldPos.w);
-    #endif
+
+        #ifdef HEIGHTFOG
+            float fogFactor = GetHeightFogFactor(vWorldPos.w, vWorldPos.y);
+        #else
+            float fogFactor = GetFogFactor(vWorldPos.w);
+        #endif
+
+
 
     #if defined(PERPIXEL)
         // Per-pixel forward lighting

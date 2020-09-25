@@ -112,6 +112,8 @@ void ProceduralSky::ApplyAllShaderVariables()
     rPath_->SetShaderParameter("MieCollectionPower", mieCollectionPower_);
     rPath_->SetShaderParameter("MieDistribution", mieDistribution_);
 }
+
+
 bool ProceduralSky::Bind(RenderPath* rPath, Camera* camera)
 {
     URHO3D_LOGDEBUG("Binding ProceduralSky");
@@ -163,7 +165,7 @@ bool ProceduralSky::Bind(RenderPath* rPath, Camera* camera)
             atmoParams["MieCollectionPower"] = mieCollectionPower_;
             atmoParams["MieDistribution"] = mieDistribution_;
             atmoParams["LightDir"] = Vector3::DOWN;
-            atmoParams["InvProj"] = cam_->GetProjection().Inverse();
+            atmoParams["InvProj"] = InvProj_;
             newCommand.shaderParameters_ = atmoParams;
             newCommand.shaderParameters_["InvViewRot"] = faceRotations_[i];
 
@@ -219,7 +221,6 @@ void ProceduralSky::Update() {
     Vector3 lightDir(-lightNode_->GetWorldDirection());
     rPath_->SetShaderParameter("LightDir", lightDir);
   }
-  rPath_->SetShaderParameter("InvProj", cam_->GetProjection().Inverse());
 }
 
 bool ProceduralSky::SetRenderSize(unsigned size) {

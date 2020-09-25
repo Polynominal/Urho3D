@@ -182,6 +182,8 @@ public:
     /// Destruct.
     ~Renderer() override;
 
+    /// setup a viewport backup so LUA created viewports dont freak out when releasing references
+    void SetViewportBackup(bool hasBackup);
     /// Set number of backbuffer viewports to render.
     void SetNumViewports(unsigned num);
     /// Set a backbuffer viewport.
@@ -516,6 +518,8 @@ private:
     HashMap<Pair<Light*, Camera*>, Rect> lightScissorCache_;
     /// Backbuffer viewports.
     Vector<SharedPtr<Viewport> > viewports_;
+    ///Viewports copy for memory safety from Lua
+    Vector<SharedPtr<Viewport>>  backupViewports_;
     /// Render surface viewports queued for update.
     Vector<Pair<WeakPtr<RenderSurface>, WeakPtr<Viewport> > > queuedViewports_;
     /// Views that have been processed this frame.

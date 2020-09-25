@@ -43,6 +43,21 @@ void RenderSurface::SetNumViewports(unsigned num)
 {
     viewports_.Resize(num);
 }
+void RenderSurface::SetViewportBackup(bool hasBackup)
+{
+    if (hasBackup)
+    {
+        backupViewports_.Resize(viewports_.Size());
+        for (unsigned i = 0; i < viewports_.Size(); ++i)
+        {
+            backupViewports_[i] = viewports_[i];
+        }
+    }
+    else
+    {
+        backupViewports_ = Vector<SharedPtr<Viewport>>(); //release viewports
+    }
+}
 
 void RenderSurface::SetViewport(unsigned index, Viewport* viewport)
 {

@@ -38,14 +38,16 @@ void PS()
             diffColor.a = cMatDiffColor.a*stencil.a;
         #endif
         #ifdef ALPHAMASK
+
             if (DiscardUsingAlphaMask(diffColor.a))
                 discard;
+            gl_FragColor = vec4(0,0,0,diffColor.a);
         #endif
     #else
+        gl_FragColor = vec4(vNormal * 0.5 + 0.5, 0);
         vec4 diffColor = cMatDiffColor;
     #endif
 
 
-    gl_FragColor = vec4(vNormal * 0.5 + 0.5, 0);
 
 }

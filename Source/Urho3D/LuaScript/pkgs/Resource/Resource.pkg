@@ -7,6 +7,8 @@ class Resource
     tolua_outside bool ResourceLoad @ Load(const String& fileName);
     tolua_outside bool ResourceSave @ Save(const String& fileName) const;
 
+    void SetName(const String& name);
+    
     const String GetName() const;
     StringHash GetNameHash() const;
     unsigned GetMemoryUse() const;

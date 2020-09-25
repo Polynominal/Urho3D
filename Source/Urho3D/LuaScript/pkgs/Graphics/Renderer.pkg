@@ -4,6 +4,7 @@ class Renderer
 {
     void SetNumViewports(unsigned num);
     void SetViewport(unsigned index, Viewport* viewport);
+    void SetViewportBackup(bool hasBackup);
     void SetDefaultRenderPath(RenderPath* renderPath);
     void SetDefaultRenderPath(XMLFile* file);
     void SetDefaultTechnique(Technique* technique);
