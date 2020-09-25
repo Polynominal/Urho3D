@@ -1,0 +1,46 @@
+<renderpath>
+    <rendertarget name="depth" sizedivisor="1 1" format="readabledepth" />
+    <rendertarget name="normal" sizedivisor="1 1" format="rgba" tag="ReadableNormals" />
+    <rendertarget name="fullscreen" sizedivisor="1 1" format="rgba" filter="true" />
+
+    <command type="clear" tag="ReadableNormals" color="fog" depth="1.0" stencil="0" output="normal" />
+    <command type="clear" tag="ClearBackground" color="fog" depth="1.0" stencil="0" depthstencil="depth" />
+    <command type="clear" color="0 0 0 0" depth="1.0" stencil="0" output="fullscreen" />
+
+
+    <command type="scenepass"      output="fullscreen" vsdefines="VOLUMETRICLIGHT" psdefines="VOLUMETRICLIGHT" vertexlights="true" pass="base" vertexlights="true" metadata="base" depthstencil="depth" />
+    <command type="forwardlights"  output="fullscreen" vsdefines="VOLUMETRICLIGHT" psdefines="VOLUMETRICLIGHT" pass="light" depthstencil="depth" />
+
+    <rendertarget name="blurv"  sizedivisor="4 4" format="rgb" filter="true" />
+    <rendertarget name="blurh" sizedivisor="4 4" format="rgb" filter="true" />
+
+    <command type="quad"  vs="VolumetricLightBloom" ps="VolumetricLightBloom" psdefines="BRIGHT VOLUMETRICLIGHT" output="blurv">
+        <parameter name="BloomThreshold" value="0.0" />
+        <texture unit="diffuse" name="fullscreen" />
+    </command>
+    <command type="quad"  vs="VolumetricLightBloom" ps="VolumetricLightBloom" psdefines="BLURH" output="blurh">
+        <texture unit="diffuse" name="blurv" />
+    </command>
+    <command type="quad"  vs="VolumetricLightBloom" ps="VolumetricLightBloom" psdefines="BLURV" output="blurv">
+        <texture unit="diffuse" name="blurh" />
+    </command>
+    <command type="quad"  vs="VolumetricLightBloom" ps="VolumetricLightBloom" psdefines="COMBINE" output="viewport">
+        <parameter name="BloomMix" value="1.0 1.0" />
+        <texture unit="diffuse" name="fullscreen" />
+        <texture unit="normal" name="blurv" />
+    </command>
+
+
+    <command type="scenepass" pass="postopaque" depthstencil="depth" />
+    <command type="scenepass" pass="refract" depthstencil="depth">
+        <texture unit="environment" name="viewport" />
+    </command>
+    <command type="scenepass" pass="alpha" vertexlights="true" sort="backtofront" metadata="alpha" depthstencil="depth" psdefines="HWDEPTH">
+        <texture unit="depth" name="depth" />
+    </command>
+    <command type="scenepass" pass="postalpha" sort="backtofront" depthstencil="depth" />
+
+    <command type="scenepass" pass="view_normal"  output="normal" tag="ReadableNormals" depthstencil="depth"/>
+
+
+</renderpath>
