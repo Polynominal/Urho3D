@@ -760,7 +760,34 @@ void Renderer::Render()
     // All views done, custom rendering can now be done before UI
     SendEvent(E_ENDALLVIEWSRENDER);
 }
+void Renderer::RenderOffScreen()
+{
+    float timeStep_ = 0.0f;
+    auto* time = GetSubsystem<Time>();
 
+    time->BeginFrame(timeStep_);
+
+    //UPDATE
+    using namespace Update;
+
+    VariantMap& eventData = GetEventDataMap();
+    eventData[P_TIMESTEP] = timeStep_;
+    // Logic post-update event
+
+    // Rendering update event
+    SendEvent(E_RENDERUPDATE, eventData);
+
+    // Post-render update event
+    SendEvent(E_POSTRENDERUPDATE, eventData);
+    //END OF
+    time->EndFrame();
+
+    if (!graphics_->BeginFrame())
+        {return;}
+
+    Render();
+    graphics_->EndFrame();
+}
 void Renderer::DrawDebugGeometry(bool depthTest)
 {
     URHO3D_PROFILE(RendererDrawDebug);

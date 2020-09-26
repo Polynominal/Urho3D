@@ -34,7 +34,7 @@ class Renderer
     void SetMobileShadowBiasAdd(float add);
     void SetMobileNormalOffsetMul(float mul);
     void ReloadShaders();
-
+    void RenderOffScreen();
     unsigned GetNumViewports() const;
     Viewport* GetViewport(unsigned index) const;
     Viewport* GetViewportForScene(Scene* scene, unsigned index) const;

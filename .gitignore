@@ -15,6 +15,7 @@ generated/
 build/
 build_release/
 build_rel_debug/
+bk/
 build_release_crosscompile/
 build_debug/
 build_windows/
