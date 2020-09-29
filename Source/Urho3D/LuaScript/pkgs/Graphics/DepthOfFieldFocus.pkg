@@ -1,0 +1,46 @@
+$using namespace Urho3D;
+$#include "Graphics/DepthOfFieldFocus.h"
+
+class DepthOfFieldFocus: public LogicComponent {
+
+DepthOfFieldFocus(Context* context);
+static void RegisterObject(Context* context);
+virtual void Start();
+void PostUpdate(float timeStep);
+void SetRenderPath(RenderPath* renderpath);
+
+void SetSmoothValue(float v);
+void SetSmoothFocusTime(float time);
+void SetSmoothFocusEnabled(bool enabled);
+
+float GetSmoothValue();
+float GetSmoothFocusTime();
+float GetSmoothFocusEnabled();
+
+void SetEnabled(bool enable);
+void Remove();
+void DrawDebugGeometry(DebugRenderer* debug, bool depthTest);
+
+unsigned GetID() const;
+bool IsReplicated() const;
+Node* GetNode() const;
+Scene* GetScene() const;
+bool IsEnabled() const;
+bool IsEnabledEffective() const;
+
+Component* GetComponent(StringHash type) const;
+Component* GetComponent(const String type) const;
+
+tolua_readonly tolua_property__get_set unsigned ID;
+tolua_readonly tolua_property__is_set bool replicated;
+tolua_property__is_set bool enabled;
+tolua_readonly tolua_property__is_set bool enabledEffective;
+tolua_readonly tolua_property__get_set Node* node;
+tolua_readonly tolua_property__get_set Scene* scene;
+
+public:
+  tolua_property__get_set float smoothValue;
+  tolua_property__get_set float smoothFocusTime;
+  tolua_property__get_set bool smoothFocusEnabled;
+
+};

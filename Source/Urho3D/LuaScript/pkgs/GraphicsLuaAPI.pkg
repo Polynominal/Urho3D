@@ -39,6 +39,7 @@ $pfile "Graphics/TextureCube.pkg"
 $pfile "Graphics/Viewport.pkg"
 $pfile "Graphics/Zone.pkg"
 $pfile "Graphics/ProceduralSky.pkg"
+$pfile "Graphics/DepthOfFieldFocus.pkg"
 
 $using namespace Urho3D;
 $#pragma warning(disable:4800)
