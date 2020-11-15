@@ -3,7 +3,7 @@ $#include "Engine/Engine.h"
 class Engine : public Object
 {
     void RunFrame();
-    
+
     Console* CreateConsole();
     DebugHud* CreateDebugHud();
 
@@ -17,6 +17,7 @@ class Engine : public Object
     void DumpProfiler();
     void DumpResources(bool dumpFileName = false);
     void DumpMemory();
+    bool OpenURL(String str);
 
     int GetMinFps() const;
     int GetMaxFps() const;

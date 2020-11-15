@@ -144,6 +144,7 @@ public:
 
     /// Apply the animation at the current time position.
     void Apply();
+    void ApplyToNodesWeighted(float factor);
 
 private:
     /// Apply animation to a skeleton. Transform changes are applied silently, so the model needs to dirty its root model afterward.

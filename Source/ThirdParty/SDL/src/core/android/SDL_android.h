@@ -64,6 +64,9 @@ int Android_JNI_SetClipboardText(const char* text);
 char* Android_JNI_GetClipboardText(void);
 SDL_bool Android_JNI_HasClipboardText(void);
 
+/* Open URL */
+int Android_JNI_OpenURL(const char *url);
+
 /* Power support */
 int Android_JNI_GetPowerInfo(int* plugged, int* charged, int* battery, int* seconds, int* percent);
 

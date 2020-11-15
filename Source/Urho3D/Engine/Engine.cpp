@@ -67,6 +67,39 @@
 #include <emscripten/emscripten.h>
 #endif
 
+
+
+#if defined(__APPLE__)
+    #include <CoreServices/CoreServices.h>
+#elif defined(__linux__) || defined(__ANDROID__)
+    #include <signal.h>
+    #include <sys/wait.h>
+    #include <errno.h>
+#elif defined(_WIN32)
+    #include <shlobj.h>
+    #include <shellapi.h>
+    #pragma comment(lib, "shell32.lib")
+#endif
+
+#if defined(__ANDROID__)
+    #include <SDL/core/android/SDL_android.h>
+#endif
+
+#if defined(__linux__)
+    #ifdef __has_include
+        #if __has_include(<spawn.h>)
+            #define HAS_POSIX_SPAWN
+    #endif
+#endif
+
+#ifdef HAS_POSIX_SPAWN
+#include <spawn.h>
+#else
+#include <unistd.h>
+#endif
+#endif
+
+
 #include "../DebugNew.h"
 
 
@@ -318,6 +351,79 @@ bool Engine::Initialize(const VariantMap& parameters)
     return true;
 }
 
+//based on https://github.com/love2d/love/blob/2b88ca1da48629e47743e20c77f1ba6e06ccf7d8/src/modules/system/System.cpp
+#ifdef HAS_POSIX_SPAWN
+extern "C"
+{
+	extern char **environ; // The environment, always available
+}
+#endif
+bool Engine::OpenURL(String url)
+{
+ //Currently only support windows, linux, mac and android
+    #if defined(__APPLE__)
+
+    	bool success = false;
+    	CFURLRef cfurl = CFURLCreateWithBytes(nullptr,
+    	                                      (const UInt8 *) url.CString(),
+    	                                      url.Length(),
+    	                                      kCFStringEncodingUTF8,
+    	                                      nullptr);
+
+    	success = LSOpenCFURLRef(cfurl, nullptr) == noErr;
+    	CFRelease(cfurl);
+    	return success;
+
+    #elif defined(__ANDROID__)
+        return Android_JNI_OpenURL(url.CString());
+
+    #elif defined(__linux__)
+
+    	pid_t pid;
+    	const char *argv[] = {"xdg-open", url.CString(), nullptr};
+
+    #ifdef HAS_POSIX_SPAWN
+    	// Note: at the moment this process inherits our file descriptors.
+    	// Note: the below const_cast is really ugly as well.
+    	if (posix_spawnp(&pid, "xdg-open", nullptr, nullptr, const_cast<char **>(argv), environ) != 0)
+    		return false;
+    #else
+    	pid = fork();
+    	if (pid == 0)
+    	{
+    		execvp("xdg-open", const_cast<char **>(argv));
+    		return false;
+    	}
+    #endif
+
+    	// Check if xdg-open already completed (or failed.)
+    	int status = 0;
+    	if (waitpid(pid, &status, WNOHANG) > 0)
+    		return (status == 0);
+    	else
+    		// We can't tell what actually happens without waiting for
+    		// the process to finish, which could take forever (literally).
+    		return true;
+
+    #elif defined(_WIN32)
+
+    	// Unicode-aware WinAPI functions don't accept UTF-8, so we need to convert.
+    	std::wstring wurl = to_widestr(url.CString());
+
+    	HINSTANCE result = 0;
+
+    	result = ShellExecuteW(nullptr,
+    		L"open",
+    		wurl.c_str(),
+    		nullptr,
+    		nullptr,
+    		SW_SHOW);
+
+
+        	return (int) result > 32;
+
+    #endif
+}
 bool Engine::InitializeResourceCache(const VariantMap& parameters, bool removeOld /*= true*/)
 {
     auto* cache = GetSubsystem<ResourceCache>();

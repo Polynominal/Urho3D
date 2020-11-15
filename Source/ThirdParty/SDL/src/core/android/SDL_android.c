@@ -19,7 +19,8 @@
   3. This notice may not be removed or altered from any source distribution.
 */
 
-// Modified by Lasse Oorni and Yao Wei Tjong for Urho3D
+// Modified by Lasse Oorni and Yao Wei Tjong for Urho3D Later by Mikus Sabanskis to include Open URL
+
 
 #include "../../SDL_internal.h"
 #include "SDL_stdinc.h"
@@ -279,7 +280,7 @@ void checkJNIReady()
         return;
     }
 
-    SDL_SetMainReady();    
+    SDL_SetMainReady();
 }
 
 // Urho3D: added function
@@ -324,7 +325,7 @@ JNIEXPORT void JNICALL SDL_JAVA_INTERFACE(nativeSetupJNI)(JNIEnv* mEnv, jclass c
 
     if (!midGetNativeSurface ||
        !midSetActivityTitle || !midSetOrientation || !midGetContext || !midInputGetInputDeviceIds ||
-       !midSendMessage || !midShowTextInput || !midIsScreenKeyboardShown || 
+       !midSendMessage || !midShowTextInput || !midIsScreenKeyboardShown ||
        !midClipboardSetText || !midClipboardGetText || !midClipboardHasText ||
        !midOpenAPKExpansionInputStream) {
         __android_log_print(ANDROID_LOG_WARN, "SDL", "Missing some Java callbacks, do you have the latest version of SDLActivity.java?");
@@ -1136,6 +1137,14 @@ void Android_JNI_CloseAudioDevice(const int iscapture)
         }
     }
 }
+int Android_JNI_OpenURL(const char *url)
+{
+    JNIEnv *env = Android_JNI_GetEnv();
+    jstring jurl = (*env)->NewStringUTF(env, url);
+    const int ret = (*env)->CallStaticIntMethod(env, mActivityClass, midOpenURL, jurl);
+    (*env)->DeleteLocalRef(env, jurl);
+    return ret;
+}
 
 /* Test for an exception and call SDL_SetError with its detail if one occurs */
 /* If the parameter silent is truthy then SDL_SetError() will not be called. */
@@ -1592,7 +1601,7 @@ char* Android_JNI_GetClipboardText(void)
     JNIEnv* env = Android_JNI_GetEnv();
     char* text = NULL;
     jstring string;
-    
+
     string = (*env)->CallStaticObjectMethod(env, mActivityClass, midClipboardGetText);
     if (string) {
         const char* utf = (*env)->GetStringUTFChars(env, string, 0);
@@ -1602,7 +1611,7 @@ char* Android_JNI_GetClipboardText(void)
         }
         (*env)->DeleteLocalRef(env, string);
     }
-    
+
     return (text == NULL) ? SDL_strdup("") : text;
 }
 

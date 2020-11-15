@@ -451,6 +451,13 @@ void AnimationState::Apply()
     else
         ApplyToNodes();
 }
+void AnimationState::ApplyToNodesWeighted(float factor)
+{
+    if (!animation_ || !IsEnabled())
+        return;
+    for (Vector<AnimationStateTrack>::Iterator i = stateTracks_.Begin(); i != stateTracks_.End(); ++i)
+        ApplyTrack(*i, factor, false);
+}
 
 void AnimationState::ApplyToModel()
 {
