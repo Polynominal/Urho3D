@@ -49,5 +49,4 @@
     <command type="quad" tag="DepthOfField" vs="CopyFramebuffer" ps="CopyFramebuffer" blend="replace" output="viewport">
         <texture unit="diffuse" name="framecopy" />
     </command>
-
 </renderpath>

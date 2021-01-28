@@ -58,7 +58,7 @@ public:
   /// Set the rendering interval (default 0).
   void SetUpdateInterval(float interval) { updateInterval_ = interval; }
   /// Set size of Skybox TextureCube.
-  bool SetRenderSize(unsigned size);
+  bool SetRenderSize(unsigned size, unsigned multisample=0);
   /// Queue render of next frame.
   void Update();
 

@@ -14,7 +14,7 @@ void OnNodeSet(Node* node);
 
 void SetUpdateAuto(bool updateAuto);
 void SetUpdateInterval(float interval);
-bool SetRenderSize(unsigned size);
+bool SetRenderSize(unsigned size, unsigned multisample);
 void Update();
 
 bool GetUpdateAuto();

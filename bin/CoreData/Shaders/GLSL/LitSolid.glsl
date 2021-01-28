@@ -4,6 +4,7 @@
 #include "ScreenPos.glsl"
 #include "Lighting.glsl"
 #include "Fog.glsl"
+#include "AlphaMask.glsl"
 
 #ifdef NORMALMAP
     varying vec4 vTexCoord;
@@ -110,7 +111,7 @@ void PS()
     #ifdef DIFFMAP
         vec4 diffInput = texture2D(sDiffMap, vTexCoord.xy);
         #ifdef ALPHAMASK
-            if (diffInput.a < 0.5)
+            if (DiscardUsingAlphaMask(diffInput.a))
                 discard;
         #endif
         vec4 diffColor = cMatDiffColor * diffInput;

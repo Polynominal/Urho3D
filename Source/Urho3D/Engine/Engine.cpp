@@ -358,6 +358,28 @@ extern "C"
 	extern char **environ; // The environment, always available
 }
 #endif
+#if defined(_WIN32)
+std::wstring to_widestr(const std::string &str)
+{
+	if (str.empty())
+		return std::wstring();
+
+	int wide_size = MultiByteToWideChar(CP_UTF8, 0, str.c_str(), (int) str.length(), nullptr, 0);
+
+	if (wide_size == 0)
+		return std::wstring();
+
+	std::wstring widestr;
+	widestr.resize(wide_size);
+
+	int ok = MultiByteToWideChar(CP_UTF8, 0, str.c_str(), (int) str.length(), &widestr[0], widestr.length());
+
+	if (!ok)
+		return std::wstring();
+
+	return widestr;
+}
+#endif
 bool Engine::OpenURL(String url)
 {
  //Currently only support windows, linux, mac and android
@@ -420,7 +442,7 @@ bool Engine::OpenURL(String url)
     		SW_SHOW);
 
 
-        	return (int) result > 32;
+        	return (unsigned long long) result > 32;
 
     #endif
 }

@@ -223,12 +223,12 @@ void ProceduralSky::Update() {
   }
 }
 
-bool ProceduralSky::SetRenderSize(unsigned size) {
+bool ProceduralSky::SetRenderSize(unsigned size, unsigned multisample) {
   if (size >= 1) {
     // Create a TextureCube and assign to the ProceduralSky material.
     SharedPtr<TextureCube> skyboxTexCube(new TextureCube(context_));
     skyboxTexCube->SetName("DiffProceduralSky");
-    skyboxTexCube->SetSize(size, Graphics::GetRGBAFormat(), TEXTURE_RENDERTARGET);
+    skyboxTexCube->SetSize(size, Graphics::GetRGBAFormat(), TEXTURE_RENDERTARGET, multisample);
     skyboxTexCube->SetFilterMode(FILTER_ANISOTROPIC);
     skyboxTexCube->SetAddressMode(COORD_U, ADDRESS_CLAMP);
     skyboxTexCube->SetAddressMode(COORD_V, ADDRESS_CLAMP);
