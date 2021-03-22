@@ -97,7 +97,7 @@ public:
 
     /// Push Lua function to stack. Return true if is successful. Return false on any error and an error string is pushed instead.
     static bool PushLuaFunction(lua_State* L, const String& functionName);
-
+    bool getGlobal(const String& name, Variant &v);
 private:
     /// Register loader.
     void RegisterLoader();

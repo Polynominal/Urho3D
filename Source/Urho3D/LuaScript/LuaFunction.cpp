@@ -99,6 +99,7 @@ bool LuaFunction::EndCall(int numReturns)
     return true;
 }
 
+
 void LuaFunction::PushInt(int value)
 {
     assert(numArguments_ >= 0);

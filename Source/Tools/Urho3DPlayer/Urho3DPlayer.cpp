@@ -38,6 +38,7 @@
 #include "Urho3DPlayer.h"
 
 #include <Urho3D/DebugNew.h>
+#include <vector>
 
 URHO3D_DEFINE_APPLICATION_MAIN(Urho3DPlayer);
 
@@ -51,29 +52,129 @@ void Urho3DPlayer::Setup()
 {
     // Web platform depends on the resource system to read any data files. Skip parsing the command line file now
     // and try later when the resource system is live
-#ifndef __EMSCRIPTEN__
-    // Read command line from a file if no arguments given. This is primarily intended for mobile platforms.
-    // Note that the command file name uses a hardcoded path that does not utilize the resource system
-    // properly (including resource path prefix), as the resource system is not yet initialized at this point
-    auto* filesystem = GetSubsystem<FileSystem>();
-    const String commandFileName = filesystem->GetProgramDir() + "Data/CommandLine.txt";
-    if (GetArguments().Empty() && filesystem->FileExists(commandFileName))
-    {
-        SharedPtr<File> commandFile(new File(context_, commandFileName));
-        if (commandFile->IsOpen())
-        {
-            commandLineRead_ = true;
-            String commandLine = commandFile->ReadLine();
-            commandFile->Close();
-            ParseArguments(commandLine, false);
-            // Reparse engine startup parameters now
-            engineParameters_ = Engine::ParseParameters(GetArguments());
-        }
-    }
-#endif
-
     // Check for script file name from the arguments
     GetScriptFileName();
+
+#ifndef __EMSCRIPTEN__
+    engineParameters_ = Engine::ParseParameters(GetArguments());
+
+    auto split = scriptFileName_.Split('/');
+    split.Pop();
+    String currentDir = String();
+    currentDir.Join(split,"/");
+    currentDir = String("/").Append(currentDir);
+
+    auto* filesystem = GetSubsystem<FileSystem>();
+
+    auto luaScriptTemp = new LuaScript(context_);
+
+
+    //these here are default best settings.
+    engineParameters_["SoundBuffer"] = 10;
+    engineParameters_["FullScreen"] = false;
+    engineParameters_["Borderless"] = true;
+    //actually not needed.
+    //engineParameters_["ResourcePrefixPath"] = "Data;CoreData;GameData";// /mnt/DC44C5E644C5C40C/Projects/Tools/Urho3d-mikus/build/bin/Urho3DPlayer;/mnt/DC44C5E644C5C40C/Projects/Personal/cross_x_mars;
+
+
+    // If script loading is successful, proceed to main loop
+    std::vector<String> Parameters= std::vector<String>{
+        "AutoloadPaths",
+        "Borderless",
+        "DumpShaders",
+        "EventProfiler",
+        "ExternalWindow",
+        "FlushGPU",
+        "ForceGL2",
+        "FrameLimiter",
+        "FullScreen",
+        "Headless",
+        "HighDPI",
+        "LogLevel",
+        "LogName",
+        "LogQuiet",
+        "LowQualityShadows",
+        "MaterialQuality",
+        "Monitor",
+        "MultiSample",
+        "Orientations",
+        "PackageCacheDir",
+        "RenderPath",
+        "RefreshRate",
+        "ResourcePackages",
+        "ResourcePaths",
+        "ResourcePrefixPaths",
+        "ShaderCacheDir",
+        "Shadows",
+        "Sound",
+        "SoundBuffer",
+        "SoundInterpolation",
+        "SoundMixRate",
+        "SoundStereo",
+        "TextureAnisotropy",
+        "TextureFilterMode",
+        "TextureQuality",
+        "TimeOut",
+        "TouchEmulation",
+        "TripleBuffer",
+        "VSync",
+        "WindowHeight",
+        "WindowIcon",
+        "WindowPositionX",
+        "WindowPositionY",
+        "WindowResizable",
+        "WindowTitle",
+        "WindowWidth",
+        "WorkerThreads"
+    };
+
+    bool fileOk = luaScriptTemp->ExecuteFile(currentDir.Append("/setup.lua"));
+
+    if (fileOk)
+    {
+        for (String key : Parameters)
+        {
+            Variant value;
+            if (luaScriptTemp->getGlobal(key, value))
+            {
+                switch (value.GetType())
+                    {
+                    case VAR_INT:
+                        engineParameters_[key] = value.GetInt();
+                        break;
+                    case VAR_INT64:
+                        engineParameters_[key] = value.GetInt();
+                        break;
+                    case VAR_BOOL:
+                        engineParameters_[key] = value.GetBool();
+                        break;
+
+                    case VAR_FLOAT:
+                        engineParameters_[key] = value.GetFloat();
+                        break;
+
+                    case VAR_DOUBLE:
+                        engineParameters_[key] = value.GetDouble();
+                        break;
+
+                    case VAR_STRING:
+                        engineParameters_[key] = value.GetString();
+                        break;
+
+                    default:
+                        break;
+                    }
+            }
+        }
+
+    }else{
+        ErrorExit("Script 'setup.lua' couldn't be loaded! check your setup");
+    }
+    delete luaScriptTemp;
+
+#endif
+
+
 
 #ifndef __EMSCRIPTEN__
     // Show usage if not found

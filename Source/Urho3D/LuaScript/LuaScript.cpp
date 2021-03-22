@@ -487,6 +487,49 @@ void LuaScript::HandleConsoleCommand(StringHash eventType, VariantMap& eventData
         ExecuteString(eventData[P_COMMAND].GetString());
 }
 
+static bool convert_data_to_variant(lua_State *L, int index, Variant &variant)
+{
+    int iType = lua_type(L, -1);
+    switch (iType)
+    {
+        //...
+        case LUA_TSTRING:
+            {
+                const char *val = lua_tostring(L, -1);
+                variant = Variant(val);
+                break;
+            }
+        case LUA_TBOOLEAN:
+            {
+                bool val = lua_toboolean(L, -1);
+                variant = Variant(val);
+                break;
+            }
+        case LUA_TNUMBER:
+            {
+                lua_Number val = lua_tonumber(L, -1);
+                variant = Variant(val);
+                break;
+            }
+        default:
+            {
+                return false;
+            }
+    }
+
+    return true;
+}
+bool LuaScript::getGlobal(const String& name, Variant &v)
+{
+    if (!luaState_)
+        return false;
+;
+    lua_getglobal(luaState_,name.CString());
+    convert_data_to_variant(luaState_,-1, v);
+    lua_pop(luaState_, 1);
+
+    return true;
+}
 bool LuaScript::PushLuaFunction(lua_State* L, const String& functionName)
 {
     Vector<String> splitNames = functionName.Split('.');

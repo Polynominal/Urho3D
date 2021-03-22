@@ -27,6 +27,7 @@
 #include "../Core/Mutex.h"
 #include "../IO/File.h"
 #include "../Resource/Resource.h"
+#include "PhyFS/physfs.h"
 
 namespace Urho3D
 {

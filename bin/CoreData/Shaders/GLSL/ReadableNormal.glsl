@@ -43,7 +43,7 @@ void PS()
         #endif
         gl_FragColor = vec4(0,0,0,diffColor.a);
     #else
-        gl_FragColor = vec4(vNormal * 0.5 + 0.5, 0);
+        gl_FragColor = vec4(vNormal * 0.5 + 0.5, 1);
     #endif
 
 
