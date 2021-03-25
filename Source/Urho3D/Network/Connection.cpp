@@ -27,7 +27,6 @@
 #include "../IO/FileSystem.h"
 #include "../IO/Log.h"
 #include "../IO/MemoryBuffer.h"
-#include "../IO/PackageFile.h"
 #include "../Network/Connection.h"
 #include "../Network/Network.h"
 #include "../Network/NetworkEvents.h"
@@ -54,18 +53,6 @@ namespace Urho3D
 
 static const int STATS_INTERVAL_MSEC = 2000;
 
-PackageDownload::PackageDownload() :
-    totalFragments_(0),
-    checksum_(0),
-    initiated_(false)
-{
-}
-
-PackageUpload::PackageUpload() :
-    fragment_(0),
-    totalFragments_(0)
-{
-}
 
 Connection::Connection(Context* context, bool isClient, const SLNet::AddressOrGUID& address, SLNet::RakPeerInterface* peer) :
     Object(context),
@@ -113,7 +100,7 @@ void Connection::SendMessage(int msgID, bool reliable, bool inOrder, const unsig
         URHO3D_LOGERROR("Null pointer supplied for network message data");
         return;
     }
-    
+
     VectorBuffer buffer;
     buffer.WriteUByte((unsigned char)msgID);
     buffer.Write(data, numBytes);
@@ -178,20 +165,6 @@ void Connection::SetScene(Scene* newScene)
     if (isClient_)
     {
         sceneState_.Clear();
-
-        // When scene is assigned on the server, instruct the client to load it. This may require downloading packages
-        const Vector<SharedPtr<PackageFile> >& packages = scene_->GetRequiredPackageFiles();
-        unsigned numPackages = packages.Size();
-        msg_.Clear();
-        msg_.WriteString(scene_->GetFileName());
-        msg_.WriteVLE(numPackages);
-        for (unsigned i = 0; i < numPackages; ++i)
-        {
-            PackageFile* package = packages[i];
-            msg_.WriteString(GetFileNameAndExtension(package->GetName()));
-            msg_.WriteUInt(package->GetTotalSize());
-            msg_.WriteUInt(package->GetChecksum());
-        }
         SendMessage(MSG_LOADSCENE, true, true, msg_);
     }
     else
@@ -333,32 +306,6 @@ void Connection::SendRemoteEvents()
     remoteEvents_.Clear();
 }
 
-void Connection::SendPackages()
-{
-    while (!uploads_.Empty())
-    {
-        unsigned char buffer[PACKAGE_FRAGMENT_SIZE];
-
-        for (HashMap<StringHash, PackageUpload>::Iterator i = uploads_.Begin(); i != uploads_.End();)
-        {
-            HashMap<StringHash, PackageUpload>::Iterator current = i++;
-            PackageUpload& upload = current->second_;
-            auto fragmentSize =
-                (unsigned)Min((int)(upload.file_->GetSize() - upload.file_->GetPosition()), (int)PACKAGE_FRAGMENT_SIZE);
-            upload.file_->Read(buffer, fragmentSize);
-
-            msg_.Clear();
-            msg_.WriteStringHash(current->first_);
-            msg_.WriteUInt(upload.fragment_++);
-            msg_.Write(buffer, fragmentSize);
-            SendMessage(MSG_PACKAGEDATA, true, false, msg_);
-
-            // Check if upload finished
-            if (upload.fragment_ == upload.totalFragments_)
-                uploads_.Erase(current);
-        }
-    }
-}
 
 void Connection::ProcessPendingLatestData()
 {
@@ -418,11 +365,6 @@ bool Connection::ProcessMessage(int msgID, MemoryBuffer& msg)
         ProcessSceneLoaded(msgID, msg);
         break;
 
-    case MSG_REQUESTPACKAGE:
-    case MSG_PACKAGEDATA:
-        ProcessPackageDownload(msgID, msg);
-        break;
-
     case MSG_LOADSCENE:
         ProcessLoadScene(msgID, msg);
         break;
@@ -445,10 +387,6 @@ bool Connection::ProcessMessage(int msgID, MemoryBuffer& msg)
     case MSG_REMOTEEVENT:
     case MSG_REMOTENODEEVENT:
         ProcessRemoteEvent(msgID, msg);
-        break;
-
-    case MSG_PACKAGEINFO:
-        ProcessPackageInfo(msgID, msg);
         break;
 
     default:
@@ -484,35 +422,10 @@ void Connection::ProcessLoadScene(int msgID, MemoryBuffer& msg)
     // Store the scene file name we need to eventually load
     sceneFileName_ = msg.ReadString();
 
-    // Clear previous pending latest data and package downloads if any
+    // Clear previous pending latest data
     nodeLatestData_.Clear();
     componentLatestData_.Clear();
-    downloads_.Clear();
 
-    // In case we have joined other scenes in this session, remove first all downloaded package files from the resource system
-    // to prevent resource conflicts
-    auto* cache = GetSubsystem<ResourceCache>();
-    const String& packageCacheDir = GetSubsystem<Network>()->GetPackageCacheDir();
-
-    Vector<SharedPtr<PackageFile> > packages = cache->GetPackageFiles();
-    for (unsigned i = 0; i < packages.Size(); ++i)
-    {
-        PackageFile* package = packages[i];
-        if (!package->GetName().Find(packageCacheDir))
-            cache->RemovePackageFile(package, true);
-    }
-
-    // Now check which packages we have in the resource cache or in the download cache, and which we need to download
-    unsigned numPackages = msg.ReadVLE();
-    if (!RequestNeededPackages(numPackages, msg))
-    {
-        OnSceneLoadFailed();
-        return;
-    }
-
-    // If no downloads were queued, can load the scene directly
-    if (downloads_.Empty())
-        OnPackagesReady();
 }
 
 void Connection::ProcessSceneChecksumError(int msgID, MemoryBuffer& msg)
@@ -735,146 +648,6 @@ void Connection::ProcessSceneUpdate(int msgID, MemoryBuffer& msg)
     }
 }
 
-void Connection::ProcessPackageDownload(int msgID, MemoryBuffer& msg)
-{
-    switch (msgID)
-    {
-    case MSG_REQUESTPACKAGE:
-        if (!IsClient())
-        {
-            URHO3D_LOGWARNING("Received unexpected RequestPackage message from server");
-            return;
-        }
-        else
-        {
-            String name = msg.ReadString();
-
-            if (!scene_)
-            {
-                URHO3D_LOGWARNING("Received a RequestPackage message without an assigned scene from client " + ToString());
-                return;
-            }
-
-            // The package must be one of those required by the scene
-            const Vector<SharedPtr<PackageFile> >& packages = scene_->GetRequiredPackageFiles();
-            for (unsigned i = 0; i < packages.Size(); ++i)
-            {
-                PackageFile* package = packages[i];
-                const String& packageFullName = package->GetName();
-                if (!GetFileNameAndExtension(packageFullName).Compare(name, false))
-                {
-                    StringHash nameHash(name);
-
-                    // Do not restart upload if already exists
-                    if (uploads_.Contains(nameHash))
-                    {
-                        URHO3D_LOGWARNING("Received a request for package " + name + " already in transfer");
-                        return;
-                    }
-
-                    // Try to open the file now
-                    SharedPtr<File> file(new File(context_, packageFullName));
-                    if (!file->IsOpen())
-                    {
-                        URHO3D_LOGERROR("Failed to transmit package file " + name);
-                        SendPackageError(name);
-                        return;
-                    }
-
-                    URHO3D_LOGINFO("Transmitting package file " + name + " to client " + ToString());
-
-                    uploads_[nameHash].file_ = file;
-                    uploads_[nameHash].fragment_ = 0;
-                    uploads_[nameHash].totalFragments_ = (file->GetSize() + PACKAGE_FRAGMENT_SIZE - 1) / PACKAGE_FRAGMENT_SIZE;
-                    return;
-                }
-            }
-
-            URHO3D_LOGERROR("Client requested an unexpected package file " + name);
-            // Send the name hash only to indicate a failed download
-            SendPackageError(name);
-            return;
-        }
-        break;
-
-    case MSG_PACKAGEDATA:
-        if (IsClient())
-        {
-            URHO3D_LOGWARNING("Received unexpected PackageData message from client");
-            return;
-        }
-        else
-        {
-            StringHash nameHash = msg.ReadStringHash();
-
-            HashMap<StringHash, PackageDownload>::Iterator i = downloads_.Find(nameHash);
-            // In case of being unable to create the package file into the cache, we will still receive all data from the server.
-            // Simply disregard it
-            if (i == downloads_.End())
-                return;
-
-            PackageDownload& download = i->second_;
-
-            // If no further data, this is an error reply
-            if (msg.IsEof())
-            {
-                OnPackageDownloadFailed(download.name_);
-                return;
-            }
-
-            // If file has not yet been opened, try to open now. Prepend the checksum to the filename to allow multiple versions
-            if (!download.file_)
-            {
-                download.file_ = new File(context_,
-                    GetSubsystem<Network>()->GetPackageCacheDir() + ToStringHex(download.checksum_) + "_" + download.name_,
-                    FILE_WRITE);
-                if (!download.file_->IsOpen())
-                {
-                    OnPackageDownloadFailed(download.name_);
-                    return;
-                }
-            }
-
-            // Write the fragment data to the proper index
-            unsigned char buffer[PACKAGE_FRAGMENT_SIZE];
-            unsigned index = msg.ReadUInt();
-            unsigned fragmentSize = msg.GetSize() - msg.GetPosition();
-
-            msg.Read(buffer, fragmentSize);
-            download.file_->Seek(index * PACKAGE_FRAGMENT_SIZE);
-            download.file_->Write(buffer, fragmentSize);
-            download.receivedFragments_.Insert(index);
-
-            // Check if all fragments received
-            if (download.receivedFragments_.Size() == download.totalFragments_)
-            {
-                URHO3D_LOGINFO("Package " + download.name_ + " downloaded successfully");
-
-                // Instantiate the package and add to the resource system, as we will need it to load the scene
-                download.file_->Close();
-                GetSubsystem<ResourceCache>()->AddPackageFile(download.file_->GetName(), 0);
-
-                // Then start the next download if there are more
-                downloads_.Erase(i);
-                if (downloads_.Empty())
-                    OnPackagesReady();
-                else
-                {
-                    PackageDownload& nextDownload = downloads_.Begin()->second_;
-
-                    URHO3D_LOGINFO("Requesting package " + nextDownload.name_ + " from server");
-                    msg_.Clear();
-                    msg_.WriteString(nextDownload.name_);
-                    SendMessage(MSG_REQUESTPACKAGE, true, true, msg_);
-                    nextDownload.initiated_ = true;
-                }
-            }
-        }
-        break;
-
-    default: break;
-    }
-}
 
 void Connection::ProcessIdentity(int msgID, MemoryBuffer& msg)
 {
@@ -1065,55 +838,7 @@ String Connection::ToString() const
     return GetAddress() + ":" + String(GetPort());
 }
 
-unsigned Connection::GetNumDownloads() const
-{
-    return downloads_.Size();
-}
 
-const String& Connection::GetDownloadName() const
-{
-    for (HashMap<StringHash, PackageDownload>::ConstIterator i = downloads_.Begin(); i != downloads_.End(); ++i)
-    {
-        if (i->second_.initiated_)
-            return i->second_.name_;
-    }
-    return String::EMPTY;
-}
-
-float Connection::GetDownloadProgress() const
-{
-    for (HashMap<StringHash, PackageDownload>::ConstIterator i = downloads_.Begin(); i != downloads_.End(); ++i)
-    {
-        if (i->second_.initiated_)
-            return (float)i->second_.receivedFragments_.Size() / (float)i->second_.totalFragments_;
-    }
-    return 1.0f;
-}
-
-void Connection::SendPackageToClient(PackageFile* package)
-{
-    if (!scene_)
-        return;
-
-    if (!IsClient())
-    {
-        URHO3D_LOGERROR("SendPackageToClient can be called on the server only");
-        return;
-    }
-    if (!package)
-    {
-        URHO3D_LOGERROR("Null package specified for SendPackageToClient");
-        return;
-    }
-
-    msg_.Clear();
-
-    String filename = GetFileNameAndExtension(package->GetName());
-    msg_.WriteString(filename);
-    msg_.WriteUInt(package->GetTotalSize());
-    msg_.WriteUInt(package->GetChecksum());
-    SendMessage(MSG_PACKAGEINFO, true, true, msg_);
-}
 
 void Connection::ConfigureNetworkSimulator(int latencyMs, float packetLoss)
 {
@@ -1408,105 +1133,6 @@ void Connection::ProcessExistingNode(Node* node, NodeReplicationState& nodeState
     sceneState_.dirtyNodes_.Erase(node->GetID());
 }
 
-bool Connection::RequestNeededPackages(unsigned numPackages, MemoryBuffer& msg)
-{
-    auto* cache = GetSubsystem<ResourceCache>();
-    const String& packageCacheDir = GetSubsystem<Network>()->GetPackageCacheDir();
-
-    Vector<SharedPtr<PackageFile> > packages = cache->GetPackageFiles();
-    Vector<String> downloadedPackages;
-    bool packagesScanned = false;
-
-    for (unsigned i = 0; i < numPackages; ++i)
-    {
-        String name = msg.ReadString();
-        unsigned fileSize = msg.ReadUInt();
-        unsigned checksum = msg.ReadUInt();
-        String checksumString = ToStringHex(checksum);
-        bool found = false;
-
-        // Check first the resource cache
-        for (unsigned j = 0; j < packages.Size(); ++j)
-        {
-            PackageFile* package = packages[j];
-            if (!GetFileNameAndExtension(package->GetName()).Compare(name, false) && package->GetTotalSize() == fileSize &&
-                package->GetChecksum() == checksum)
-            {
-                found = true;
-                break;
-            }
-        }
-
-        if (found)
-            continue;
-
-        if (!packagesScanned)
-        {
-            if (packageCacheDir.Empty())
-            {
-                URHO3D_LOGERROR("Can not check/download required packages, as package cache directory is not set");
-                return false;
-            }
-
-            GetSubsystem<FileSystem>()->ScanDir(downloadedPackages, packageCacheDir, "*.*", SCAN_FILES, false);
-            packagesScanned = true;
-        }
-
-        // Then the download cache
-        for (unsigned j = 0; j < downloadedPackages.Size(); ++j)
-        {
-            const String& fileName = downloadedPackages[j];
-            // In download cache, package file name format is checksum_packagename
-            if (!fileName.Find(checksumString) && !fileName.Substring(9).Compare(name, false))
-            {
-                // Name matches. Check file size and actual checksum to be sure
-                SharedPtr<PackageFile> newPackage(new PackageFile(context_, packageCacheDir + fileName));
-                if (newPackage->GetTotalSize() == fileSize && newPackage->GetChecksum() == checksum)
-                {
-                    // Add the package to the resource system now, as we will need it to load the scene
-                    cache->AddPackageFile(newPackage, 0);
-                    found = true;
-                    break;
-                }
-            }
-        }
-
-        // Package not found, need to request a download
-        if (!found)
-            RequestPackage(name, fileSize, checksum);
-    }
-
-    return true;
-}
-
-void Connection::RequestPackage(const String& name, unsigned fileSize, unsigned checksum)
-{
-    StringHash nameHash(name);
-    if (downloads_.Contains(nameHash))
-        return; // Download already exists
-
-    PackageDownload& download = downloads_[nameHash];
-    download.name_ = name;
-    download.totalFragments_ = (fileSize + PACKAGE_FRAGMENT_SIZE - 1) / PACKAGE_FRAGMENT_SIZE;
-    download.checksum_ = checksum;
-
-    // Start download now only if no existing downloads, else wait for the existing ones to finish
-    if (downloads_.Size() == 1)
-    {
-        URHO3D_LOGINFO("Requesting package " + name + " from server");
-        msg_.Clear();
-        msg_.WriteString(name);
-        SendMessage(MSG_REQUESTPACKAGE, true, true, msg_);
-        download.initiated_ = true;
-    }
-}
-
-void Connection::SendPackageError(const String& name)
-{
-    msg_.Clear();
-    msg_.WriteStringHash(name);
-    SendMessage(MSG_PACKAGEDATA, true, false, msg_);
-}
 
 void Connection::OnSceneLoadFailed()
 {
@@ -1518,72 +1144,12 @@ void Connection::OnSceneLoadFailed()
     eventData[P_CONNECTION] = this;
     SendEvent(E_NETWORKSCENELOADFAILED, eventData);
 }
-
-void Connection::OnPackageDownloadFailed(const String& name)
-{
-    URHO3D_LOGERROR("Download of package " + name + " failed");
-    // As one package failed, we can not join the scene in any case. Clear the downloads
-    downloads_.Clear();
-    OnSceneLoadFailed();
-}
-
-void Connection::OnPackagesReady()
-{
-    if (!scene_)
-        return;
-
-    // If sceneLoaded_ is true, we may have received additional package downloads while already joined in a scene.
-    // In that case the scene should not be loaded.
-    if (sceneLoaded_)
-        return;
-
-    if (sceneFileName_.Empty())
-    {
-        // If the scene filename is empty, just clear the scene of all existing replicated content, and send the loaded reply
-        scene_->Clear(true, false);
-        sceneLoaded_ = true;
-
-        msg_.Clear();
-        msg_.WriteUInt(scene_->GetChecksum());
-        SendMessage(MSG_SCENELOADED, true, true, msg_);
-    }
-    else
-    {
-        // Otherwise start the async loading process
-        String extension = GetExtension(sceneFileName_);
-        SharedPtr<File> file = GetSubsystem<ResourceCache>()->GetFile(sceneFileName_);
-        bool success;
-
-        if (extension == ".xml")
-            success = scene_->LoadAsyncXML(file);
-        else
-            success = scene_->LoadAsync(file);
-
-        if (!success)
-            OnSceneLoadFailed();
-    }
-}
-
-void Connection::ProcessPackageInfo(int msgID, MemoryBuffer& msg)
-{
-    if (!scene_)
-        return;
-
-    if (IsClient())
-    {
-        URHO3D_LOGWARNING("Received unexpected packages info message from client");
-        return;
-    }
-
-    RequestNeededPackages(1, msg);
-}
-
 String Connection::GetAddress() const {
-    return String(address_->ToString(false /*write port*/)); 
+    return String(address_->ToString(false /*write port*/));
 }
 
 void Connection::SetAddressOrGUID(const SLNet::AddressOrGUID& addr)
-{ 
+{
     delete address_;
     address_ = nullptr;
     address_ = new SLNet::AddressOrGUID(addr);

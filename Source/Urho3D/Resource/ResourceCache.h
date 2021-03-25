@@ -27,16 +27,14 @@
 #include "../Core/Mutex.h"
 #include "../IO/File.h"
 #include "../Resource/Resource.h"
-#include "PhyFS/physfs.h"
+#include "physfs/physfs.h"
 
 namespace Urho3D
 {
 
 class BackgroundLoader;
 class FileWatcher;
-class PackageFile;
 
-/// Sets to priority so that a package or file is pushed to the end of the vector.
 static const unsigned PRIORITY_LAST = 0xffffffff;
 
 /// Container of resources with specific type.
@@ -91,18 +89,10 @@ public:
 
     /// Add a resource load directory. Optional priority parameter which will control search order.
     bool AddResourceDir(const String& pathName, unsigned priority = PRIORITY_LAST);
-    /// Add a package file for loading resources from. Optional priority parameter which will control search order.
-    bool AddPackageFile(PackageFile* package, unsigned priority = PRIORITY_LAST);
-    /// Add a package file for loading resources from by name. Optional priority parameter which will control search order.
-    bool AddPackageFile(const String& fileName, unsigned priority = PRIORITY_LAST);
     /// Add a manually created resource. Must be uniquely named within its type.
     bool AddManualResource(Resource* resource);
     /// Remove a resource load directory.
     void RemoveResourceDir(const String& pathName);
-    /// Remove a package file. Optionally release the resources loaded from it.
-    void RemovePackageFile(PackageFile* package, bool releaseResources = true, bool forceRelease = false);
-    /// Remove a package file by name. Optionally release the resources loaded from it.
-    void RemovePackageFile(const String& fileName, bool releaseResources = true, bool forceRelease = false);
     /// Release a resource by name.
     void ReleaseResource(StringHash type, const String& name, bool force = false);
     /// Release all resources of a specific type.
@@ -124,9 +114,6 @@ public:
     /// Enable or disable returning resources that failed to load. Default false. This may be useful in editing to not lose resource ref attributes.
     void SetReturnFailedResources(bool enable) { returnFailedResources_ = enable; }
 
-    /// Define whether when getting resources should check package files or directories first. True for packages, false for directories.
-    void SetSearchPackagesFirst(bool value) { searchPackagesFirst_ = value; }
-
     /// Set how many milliseconds maximum per frame to spend on finishing background loaded resources.
     void SetFinishBackgroundResourcesMs(int ms) { finishBackgroundResourcesMs_ = Max(ms, 1); }
 
@@ -135,7 +122,7 @@ public:
     /// Remove a resource router object.
     void RemoveResourceRouter(ResourceRouter* router);
 
-    /// Open and return a file from the resource load paths or from inside a package file. If not found, use a fallback search with absolute path. Return null if fails. Can be called from outside the main thread.
+    /// Open and return a file from the resource load paths. If not found, use a fallback search with absolute path. Return null if fails. Can be called from outside the main thread.
     SharedPtr<File> GetFile(const String& name, bool sendEventOnFailure = true);
     /// Return a resource by type and name. Load if not loaded yet. Return null if not found or if fails, unless SetReturnFailedResources(true) has been called. Can be called only from the main thread.
     Resource* GetResource(StringHash type, const String& name, bool sendEventOnFailure = true);
@@ -156,8 +143,6 @@ public:
     /// Return added resource load directories.
     const Vector<String>& GetResourceDirs() const { return resourceDirs_; }
 
-    /// Return added package files.
-    const Vector<SharedPtr<PackageFile> >& GetPackageFiles() const { return packages_; }
 
     /// Template version of returning a resource by name.
     template <class T> T* GetResource(const String& name, bool sendEventOnFailure = true);
@@ -171,7 +156,7 @@ public:
     template <class T> bool BackgroundLoadResource(const String& name, bool sendEventOnFailure = true, Resource* caller = nullptr);
     /// Template version of returning loaded resources of a specific type.
     template <class T> void GetResources(PODVector<T*>& result) const;
-    /// Return whether a file exists in the resource directories or package files. Does not check manually added in-memory resources.
+    /// Return whether a file exists in the resource directories. Does not check manually added in-memory resources.
     bool Exists(const String& name) const;
     /// Return memory budget for a resource type.
     unsigned long long GetMemoryBudget(StringHash type) const;
@@ -187,9 +172,6 @@ public:
 
     /// Return whether resources that failed to load are returned.
     bool GetReturnFailedResources() const { return returnFailedResources_; }
-
-    /// Return whether when getting resources should check package files or directories first.
-    bool GetSearchPackagesFirst() const { return searchPackagesFirst_; }
 
     /// Return how many milliseconds maximum to spend on finishing background loaded resources.
     int GetFinishBackgroundResourcesMs() const { return finishBackgroundResourcesMs_; }
@@ -216,16 +198,12 @@ private:
     const SharedPtr<Resource>& FindResource(StringHash type, StringHash nameHash);
     /// Find a resource by name only. Searches all type groups.
     const SharedPtr<Resource>& FindResource(StringHash nameHash);
-    /// Release resources loaded from a package file.
-    void ReleasePackageResources(PackageFile* package, bool force = false);
-    /// Update a resource group. Recalculate memory use and release resources if over memory budget.
+    /// Refresh resources
     void UpdateResourceGroup(StringHash type);
     /// Handle begin frame event. Automatic resource reloads and the finalization of background loaded resources are processed here.
     void HandleBeginFrame(StringHash eventType, VariantMap& eventData);
     /// Search FileSystem for file.
     File* SearchResourceDirs(const String& name);
-    /// Search resource packages for file.
-    File* SearchPackages(const String& name);
 
     /// Mutex for thread-safe access to the resource directories, resource packages and resource dependencies.
     mutable Mutex resourceMutex_;
@@ -235,8 +213,6 @@ private:
     Vector<String> resourceDirs_;
     /// File watchers for resource directories, if automatic reloading enabled.
     Vector<SharedPtr<FileWatcher> > fileWatchers_;
-    /// Package files.
-    Vector<SharedPtr<PackageFile> > packages_;
     /// Dependent resources. Only used with automatic reload to eg. trigger reload of a cube texture when any of its faces change.
     HashMap<StringHash, HashSet<StringHash> > dependentResources_;
     /// Resource background loader.
@@ -248,8 +224,6 @@ private:
     /// Return failed resources flag.
     bool returnFailedResources_;
     /// Search priority flag.
-    bool searchPackagesFirst_;
-    /// Resource routing flag to prevent endless recursion.
     mutable bool isRouting_;
     /// How many milliseconds maximum per frame to spend on finishing background loaded resources.
     int finishBackgroundResourcesMs_;

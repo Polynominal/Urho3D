@@ -46,6 +46,7 @@ extern "C"
 #include "../LuaScript/ToluaUtils.h"
 
 #include "../DebugNew.h"
+#include <iostream>
 
 extern int tolua_AudioLuaAPI_open(lua_State*);
 extern int tolua_CoreLuaAPI_open(lua_State*);
@@ -93,6 +94,7 @@ LuaScript::LuaScript(Context* context) :
         URHO3D_LOGERROR("Could not create Lua state");
         return;
     }
+
 
     lua_atpanic(luaState_, &LuaScript::AtPanic);
 
@@ -263,6 +265,7 @@ bool LuaScript::ExecuteString(const String& string)
     return true;
 }
 
+
 bool LuaScript::LoadRawFile(const String& fileName)
 {
     URHO3D_PROFILE(LoadRawFile);
@@ -270,26 +273,32 @@ bool LuaScript::LoadRawFile(const String& fileName)
     URHO3D_LOGINFO("Finding Lua file on file system: " + fileName);
 
     auto* cache = GetSubsystem<ResourceCache>();
-    String filePath = cache->GetResourceFileName(fileName);
 
+    String filePath = cache->GetResourceFileName(fileName);
     if (filePath.Empty())
     {
         URHO3D_LOGINFO("Lua file not found: " + fileName);
         return false;
     }
-
     filePath = GetNativePath(filePath);
-
     URHO3D_LOGINFO("Loading Lua file from file system: " + filePath);
 
-    if (luaL_loadfile(luaState_, filePath.CString()))
+    SharedPtr<File> srcFile(new File(context_, filePath, FILE_READ));
+    if (!srcFile->IsOpen())
+        URHO3D_LOGINFO("Failed to load Lua file from file system, file does not exist: " + filePath);
+        return false;
+
+    String code = srcFile->ReadString();
+    const char* strData = code.CString();
+
+    if ( luaL_loadbuffer(luaState_,strData, strlen(strData), filePath.CString()) )
     {
         const char* message = lua_tostring(luaState_, -1);
         URHO3D_LOGERRORF("Load Lua file failed: %s", message);
         lua_pop(luaState_, 1);
         return false;
     }
-
+    srcFile->Close();
     URHO3D_LOGINFO("Lua file loaded: " + filePath);
 
     return true;
@@ -354,31 +363,63 @@ int LuaScript::AtPanic(lua_State* L)
 
 int LuaScript::Loader(lua_State* L)
 {
-    // Get module name
-    String fileName(luaL_checkstring(L, 1));
+    const char *name = luaL_checkstring(L, 1);
+    std::string s = name;
+    std::replace( s.begin(), s.end(), '.', '/'); // replace all '.' to '/'
+    s += ".lua"; // apend .lua
 
-#ifdef URHO3D_LUA_RAW_SCRIPT_LOADER
-    // First attempt to load lua script file from the file system
-    // Attempt to load .luc file first, then fall back to .lua
-    auto* lua = ::GetContext(L)->GetSubsystem<LuaScript>();
-    if (lua->LoadRawFile(fileName + ".luc") || lua->LoadRawFile(fileName + ".lua"))
-        return 1;
-#endif
+    auto handle_ = PHYSFS_openRead(s.c_str());
+    if (!handle_)
+    {
+        URHO3D_LOGERRORF("Cannot find lua file: %s",s.c_str());
+        return 0;
+    }
 
-    auto* cache = ::GetContext(L)->GetSubsystem<ResourceCache>();
+    PHYSFS_sint64 file_size = PHYSFS_fileLength(handle_);
+    char* buffer = new char[file_size+1];
+    if (PHYSFS_readBytes(handle_,buffer,file_size) != file_size)
+    {
+        URHO3D_LOGERRORF("Lua file reading failed: %s",PHYSFS_getErrorByCode(PHYSFS_getLastErrorCode()));
+        return 0;
+    }
+    buffer[file_size] = '\0';
+    PHYSFS_close(handle_);
 
-    // Attempt to get .luc file first
-    auto* lucFile = cache->GetResource<LuaFile>(fileName + ".luc", false);
-    if (lucFile)
-        return lucFile->LoadChunk(L) ? 1 : 0;
+    if( luaL_loadbuffer(L, buffer, strlen(buffer), s.c_str()) )
+    {
+        const char* message = lua_tostring(L, -1);
+        URHO3D_LOGERRORF("Load Lua file failed: %s",message);
+        lua_pop(L, 1);
+        return 0;
+    }
 
-    // Then try to get .lua file. If this also fails, error is logged and
-    // resource not found event is sent
-    auto* luaFile = cache->GetResource<LuaFile>(fileName + ".lua");
-    if (luaFile)
-        return luaFile->LoadChunk(L) ? 1 : 0;
+    return 1;
 
-    return 0;
+//     // Get module name
+//     String fileName(luaL_checkstring(L, 1));
+//
+// #ifdef URHO3D_LUA_RAW_SCRIPT_LOADER
+//     // First attempt to load lua script file from the file system
+//     // Attempt to load .luc file first, then fall back to .lua
+//     auto* lua = ::GetContext(L)->GetSubsystem<LuaScript>();
+//     if (lua->LoadRawFile(fileName + ".luc") || lua->LoadRawFile(fileName + ".lua"))
+//         return 1;
+// #endif
+//
+//     auto* cache = ::GetContext(L)->GetSubsystem<ResourceCache>();
+//
+//     // Attempt to get .luc file first
+//     auto* lucFile = cache->GetResource<LuaFile>(fileName + ".luc", false);
+//     if (lucFile)
+//         return lucFile->LoadChunk(L) ? 1 : 0;
+//
+//     // Then try to get .lua file. If this also fails, error is logged and
+//     // resource not found event is sent
+//     auto* luaFile = cache->GetResource<LuaFile>(fileName + ".lua");
+//     if (luaFile)
+//         return luaFile->LoadChunk(L) ? 1 : 0;
+//
+//     return 0;
 }
 
 void LuaScript::ReplacePrint()

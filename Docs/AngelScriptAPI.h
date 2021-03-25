@@ -2430,7 +2430,6 @@ bool HasSubscribedToEvent(Object, const String&);
 bool HasSubscribedToEvent(const String&);
 void SendEvent(const String&, VariantMap& = VariantMap ( ));
 void SendMessage(int, bool, bool, const VectorBuffer&, uint = 0);
-void SendPackageToClient(PackageFile);
 void SendRemoteEvent(Node, const String&, bool, const VariantMap& = VariantMap ( ));
 void SendRemoteEvent(const String&, bool, const VariantMap& = VariantMap ( ));
 String ToString() const;
@@ -7806,7 +7805,6 @@ bool HasSubscribedToEvent(const String&);
 HttpRequest MakeHttpRequest(const String&, const String& = String ( ), Array<String> = null, const String& = String ( ));
 void RegisterRemoteEvent(const String&) const;
 void SendEvent(const String&, VariantMap& = VariantMap ( ));
-void SendPackageToClients(Scene, PackageFile);
 bool SetDiscoveryBeacon(const VariantMap& = VariantMap ( ));
 void SetNATServerInfo(const String&, uint16);
 bool SetPassword(const String&);
@@ -8421,42 +8419,6 @@ String typeName;
 int weakRefs;
 };
 
-class PackageFile
-{
-public:
-PackageFile();
-PackageFile(const String&in, uint startOffset = 0);
-// Methods:
-bool Exists(const String&) const;
-Array<String> GetEntryNames() const;
-bool HasSubscribedToEvent(Object, const String&);
-bool HasSubscribedToEvent(const String&);
-bool Open(const String&, uint = 0) const;
-void SendEvent(const String&, VariantMap& = VariantMap ( ));
-bool compressed() const;
-
-// Properties:
-/* readonly */
-String category;
-/* readonly */
-uint checksum;
-/* readonly */
-String name;
-/* readonly */
-uint numFiles;
-/* readonly */
-int refs;
-/* readonly */
-uint totalDataSize;
-/* readonly */
-uint totalSize;
-/* readonly */
-StringHash type;
-/* readonly */
-String typeName;
-/* readonly */
-int weakRefs;
-};
 
 class ParticleEffect
 {
@@ -9619,8 +9581,6 @@ class ResourceCache
 public:
 // Methods:
 bool AddManualResource(Resource);
-bool AddPackageFile(PackageFile, uint = M_MAX_UNSIGNED);
-bool AddPackageFile(const String&, uint = M_MAX_UNSIGNED);
 bool AddResourceDir(const String&, uint = M_MAX_UNSIGNED);
 bool BackgroundLoadResource(const String&, const String&, bool = true);
 bool Exists(const String&) const;
@@ -9642,8 +9602,6 @@ void ReleaseResources(const String&, bool = false);
 void ReleaseResources(const String&, const String&, bool = false);
 bool ReloadResource(Resource);
 void ReloadResourceWithDependencies(const String&);
-void RemovePackageFile(PackageFile, bool = true, bool = false);
-void RemovePackageFile(const String&, bool = true, bool = false);
 void RemoveResourceDir(const String&);
 String SanitateResourceDirName(const String&) const;
 String SanitateResourceName(const String&) const;
@@ -9659,8 +9617,6 @@ Array<uint64> memoryBudget;
 Array<uint64> memoryUse;
 /* readonly */
 uint numBackgroundLoadResources;
-/* readonly */
-Array<PackageFile> packageFiles;
 /* readonly */
 int refs;
 /* readonly */
@@ -10028,12 +9984,10 @@ Scene();
 Scene(const String&in);
 // Methods:
 void AddChild(Node, uint = M_MAX_UNSIGNED);
-void AddRequiredPackageFile(PackageFile);
 void AddTag(const String&);
 void AddTags(const String&, int8 = ';');
 void ApplyAttributes();
 void Clear(bool = true, bool = true);
-void ClearRequiredPackageFiles();
 Component CloneComponent(Component, CreateMode, uint = 0);
 Component CloneComponent(Component, uint = 0);
 Node CreateChild(const String& = String ( ), CreateMode = REPLICATED, uint = 0, bool = false);
@@ -10221,7 +10175,6 @@ int refs;
 /* readonly */
 bool replicated;
 /* readonly */
-Array<PackageFile> requiredPackageFiles;
 /* readonly */
 Vector3 right;
 Quaternion rotation;

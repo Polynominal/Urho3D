@@ -24,7 +24,6 @@
 
 #include "../AngelScript/APITemplates.h"
 #include "../Graphics/DebugRenderer.h"
-#include "../IO/PackageFile.h"
 #include "../Scene/ObjectAnimation.h"
 #include "../Scene/Scene.h"
 #include "../Scene/SmoothedTransform.h"
@@ -250,10 +249,6 @@ static Node* SceneInstantiateJSONFile(JSONFile* json, const Vector3& position, c
     return json ? ptr->InstantiateJSON(json->GetRoot(), position, rotation, mode) : nullptr;
 }
 
-static CScriptArray* SceneGetRequiredPackageFiles(Scene* ptr)
-{
-    return VectorToHandleArray<PackageFile>(ptr->GetRequiredPackageFiles(), "Array<PackageFile@>");
-}
 
 static CScriptArray* GetObjectCategories()
 {
@@ -369,8 +364,6 @@ static void RegisterScene(asIScriptEngine* engine)
     engine->RegisterObjectMethod("Scene", "Node@+ InstantiateJSON(const JSONValue&in, const Vector3&in, const Quaternion&in, CreateMode mode = REPLICATED)", asMETHODPR(Scene, InstantiateJSON, (const JSONValue&, const Vector3&, const Quaternion&, CreateMode), Node*), asCALL_THISCALL);
 
     engine->RegisterObjectMethod("Scene", "void Clear(bool clearReplicated = true, bool clearLocal = true)", asMETHOD(Scene, Clear), asCALL_THISCALL);
-    engine->RegisterObjectMethod("Scene", "void AddRequiredPackageFile(PackageFile@+)", asMETHOD(Scene, AddRequiredPackageFile), asCALL_THISCALL);
-    engine->RegisterObjectMethod("Scene", "void ClearRequiredPackageFiles()", asMETHOD(Scene, ClearRequiredPackageFiles), asCALL_THISCALL);
 
     engine->RegisterObjectMethod("Scene", "void RegisterVar(const String&in)", asMETHOD(Scene, RegisterVar), asCALL_THISCALL);
     engine->RegisterObjectMethod("Scene", "void UnregisterVar(const String&in)", asMETHOD(Scene, UnregisterVar), asCALL_THISCALL);
@@ -399,7 +392,6 @@ static void RegisterScene(asIScriptEngine* engine)
     engine->RegisterObjectMethod("Scene", "int get_asyncLoadingMs() const", asMETHOD(Scene, GetAsyncLoadingMs), asCALL_THISCALL);
     engine->RegisterObjectMethod("Scene", "uint get_checksum() const", asMETHOD(Scene, GetChecksum), asCALL_THISCALL);
     engine->RegisterObjectMethod("Scene", "const String& get_fileName() const", asMETHOD(Scene, GetFileName), asCALL_THISCALL);
-    engine->RegisterObjectMethod("Scene", "Array<PackageFile@>@ get_requiredPackageFiles() const", asFUNCTION(SceneGetRequiredPackageFiles), asCALL_CDECL_OBJLAST);
     engine->RegisterObjectMethod("Node", "Scene@+ get_scene() const", asMETHOD(Node, GetScene), asCALL_THISCALL);
     engine->RegisterGlobalFunction("Scene@+ get_scene()", asFUNCTION(GetScriptContextScene), asCALL_CDECL);
 

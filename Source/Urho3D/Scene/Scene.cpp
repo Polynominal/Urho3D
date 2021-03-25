@@ -28,7 +28,6 @@
 #include "../Core/WorkQueue.h"
 #include "../IO/File.h"
 #include "../IO/Log.h"
-#include "../IO/PackageFile.h"
 #include "../Resource/ResourceCache.h"
 #include "../Resource/ResourceEvents.h"
 #include "../Resource/XMLFile.h"
@@ -672,20 +671,6 @@ void Scene::SetAsyncLoadingMs(int ms)
 void Scene::SetElapsedTime(float time)
 {
     elapsedTime_ = time;
-}
-
-void Scene::AddRequiredPackageFile(PackageFile* package)
-{
-    // Do not add packages that failed to load
-    if (!package || !package->GetNumFiles())
-        return;
-
-    requiredPackageFiles_.Push(SharedPtr<PackageFile>(package));
-}
-
-void Scene::ClearRequiredPackageFiles()
-{
-    requiredPackageFiles_.Clear();
 }
 
 void Scene::RegisterVar(const String& name)

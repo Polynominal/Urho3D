@@ -363,15 +363,13 @@ void ShaderVariation::SaveByteCode(const String& binaryShaderName)
     FileSystem* fileSystem = owner_->GetSubsystem<FileSystem>();
 
     // Filename may or may not be inside the resource system
-    String fullName = binaryShaderName;
-    if (!IsAbsolutePath(fullName))
-    {
-        // If not absolute, use the resource dir of the shader
-        String shaderFileName = cache->GetResourceFileName(owner_->GetName());
-        if (shaderFileName.Empty())
-            return;
-        fullName = shaderFileName.Substring(0, shaderFileName.Find(owner_->GetName())) + binaryShaderName;
-    }
+
+    // If not absolute, use the resource dir of the shader
+    String shaderFileName = cache->GetResourceFileName(owner_->GetName());
+    if (shaderFileName.Empty())
+        return;
+    fullName = shaderFileName.Substring(0, shaderFileName.Find(owner_->GetName())) + binaryShaderName;
+
     String path = GetPath(fullName);
     if (!fileSystem->DirExists(path))
         fileSystem->CreateDir(path);

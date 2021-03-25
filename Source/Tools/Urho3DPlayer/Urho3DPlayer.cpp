@@ -39,6 +39,7 @@
 
 #include <Urho3D/DebugNew.h>
 #include <vector>
+#include <iostream>
 
 URHO3D_DEFINE_APPLICATION_MAIN(Urho3DPlayer);
 
@@ -57,6 +58,7 @@ void Urho3DPlayer::Setup()
 
 #ifndef __EMSCRIPTEN__
     engineParameters_ = Engine::ParseParameters(GetArguments());
+    engine_->mountResourcePaths(engineParameters_);
 
     auto split = scriptFileName_.Split('/');
     split.Pop();
@@ -65,6 +67,7 @@ void Urho3DPlayer::Setup()
     currentDir = String("/").Append(currentDir);
 
     auto* filesystem = GetSubsystem<FileSystem>();
+    filesystem->PermitSymLinks();
 
     auto luaScriptTemp = new LuaScript(context_);
 
@@ -128,7 +131,7 @@ void Urho3DPlayer::Setup()
         "WorkerThreads"
     };
 
-    bool fileOk = luaScriptTemp->ExecuteFile(currentDir.Append("/setup.lua"));
+    bool fileOk = luaScriptTemp->ExecuteFile("setup.lua");
 
     if (fileOk)
     {
@@ -231,8 +234,8 @@ void Urho3DPlayer::Setup()
     }
     else
     {
-        // Use the script file name as the base name for the log file
-        engineParameters_[EP_LOG_NAME] = filesystem->GetAppPreferencesDir("urho3d", "logs") + GetFileNameAndExtension(scriptFileName_) + ".log";
+        // // Use the script file name as the base name for the log file
+        // engineParameters_[EP_LOG_NAME] = filesystem->GetAppPreferencesDir("urho3d", "logs") + GetFileNameAndExtension(scriptFileName_) + ".log";
     }
 #else
     // On Web platform setup a default windowed resolution similar to the executable samples
@@ -242,8 +245,11 @@ void Urho3DPlayer::Setup()
     // Construct a search path to find the resource prefix with two entries:
     // The first entry is an empty path which will be substituted with program/bin directory -- this entry is for binary when it is still in build tree
     // The second and third entries are possible relative paths from the installed program/bin directory to the asset directory -- these entries are for binary when it is in the Urho3D SDK installation location
-    if (!engineParameters_.Contains(EP_RESOURCE_PREFIX_PATHS))
-        engineParameters_[EP_RESOURCE_PREFIX_PATHS] = ";../share/Resources;../share/Urho3D/Resources";
+    // if (!engineParameters_.Contains(EP_RESOURCE_PREFIX_PATHS))
+    //     engineParameters_[EP_RESOURCE_PREFIX_PATHS] = ";../share/Resources;../share/Urho3D/Resources";
+
+
+
 }
 
 void Urho3DPlayer::Start()

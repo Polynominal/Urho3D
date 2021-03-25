@@ -24,10 +24,11 @@
 
 #include "../Core/Object.h"
 #include "../Core/Timer.h"
+#include <physfs/physfs.h>
 
 namespace Urho3D
 {
-
+class Application;
 class Console;
 class DebugHud;
 
@@ -43,9 +44,10 @@ public:
     ~Engine() override;
 
     /// Initialize engine using parameters given and show the application window. Return true if successful.
-    bool Initialize(const VariantMap& parameters);
+    bool Initialize(const VariantMap& parameters, Application& app);
+    bool mountResourcePaths(const VariantMap& parameters);
     /// Reinitialize resource cache subsystem using parameters given. Implicitly called by Initialize. Return true if successful.
-    bool InitializeResourceCache(const VariantMap& parameters, bool removeOld = true);
+    bool InitializeResourceCache(const VariantMap& parameters, bool removeOld /*= true*/, Application& app);
     /// launch a link
     bool OpenURL(String str);
     /// Run one frame.

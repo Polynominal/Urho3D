@@ -33,7 +33,6 @@ namespace Urho3D
 {
 
 class File;
-class PackageFile;
 
 static const unsigned FIRST_REPLICATED_ID = 0x1;
 static const unsigned LAST_REPLICATED_ID = 0xffffff;
@@ -154,10 +153,6 @@ public:
     void SetSnapThreshold(float threshold);
     /// Set maximum milliseconds per frame to spend on async scene loading.
     void SetAsyncLoadingMs(int ms);
-    /// Add a required package file for networking. To be called on the server.
-    void AddRequiredPackageFile(PackageFile* package);
-    /// Clear required package files.
-    void ClearRequiredPackageFiles();
     /// Register a node user variable hash reverse mapping (for editing.)
     void RegisterVar(const String& name);
     /// Unregister a node user variable hash reverse mapping.
@@ -204,9 +199,6 @@ public:
 
     /// Return maximum milliseconds per frame to spend on async loading.
     int GetAsyncLoadingMs() const { return asyncLoadingMs_; }
-
-    /// Return required package files.
-    const Vector<SharedPtr<PackageFile> >& GetRequiredPackageFiles() const { return requiredPackageFiles_; }
 
     /// Return a node user variable name, or empty if not registered.
     const String& GetVarName(StringHash hash) const;
@@ -294,8 +286,6 @@ private:
     SceneResolver resolver_;
     /// Source file name.
     mutable String fileName_;
-    /// Required package files for networking.
-    Vector<SharedPtr<PackageFile> > requiredPackageFiles_;
     /// Registered node user variable reverse mappings.
     HashMap<StringHash, String> varNames_;
     /// Nodes to check for attribute changes on the next network update.

@@ -70,7 +70,7 @@ int Application::Run()
         if (exitCode_)
             return exitCode_;
 
-        if (!engine_->Initialize(engineParameters_))
+        if (!engine_->Initialize(engineParameters_, *this))
         {
             ErrorExit();
             return exitCode_;
@@ -105,6 +105,9 @@ int Application::Run()
         return EXIT_FAILURE;
     }
 #endif
+
+
+
 }
 
 void Application::ErrorExit(const String& message)

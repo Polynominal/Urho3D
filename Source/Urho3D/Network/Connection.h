@@ -47,7 +47,6 @@ class MemoryBuffer;
 class Node;
 class Scene;
 class Serializable;
-class PackageFile;
 
 /// Queued remote event.
 struct RemoteEvent
@@ -62,39 +61,6 @@ struct RemoteEvent
     bool inOrder_;
 };
 
-/// Package file receive transfer.
-struct PackageDownload
-{
-    /// Construct with defaults.
-    PackageDownload();
-
-    /// Destination file.
-    SharedPtr<File> file_;
-    /// Already received fragments.
-    HashSet<unsigned> receivedFragments_;
-    /// Package name.
-    String name_;
-    /// Total number of fragments.
-    unsigned totalFragments_;
-    /// Checksum.
-    unsigned checksum_;
-    /// Download initiated flag.
-    bool initiated_;
-};
-
-/// Package file send transfer.
-struct PackageUpload
-{
-    /// Construct with defaults.
-    PackageUpload();
-
-    /// Source file.
-    SharedPtr<File> file_;
-    /// Current fragment index.
-    unsigned fragment_;
-    /// Total number of fragments
-    unsigned totalFragments_;
-};
 
 /// Send modes for observer position/rotation. Activated by the client setting either position or rotation.
 enum ObserverPositionSendMode
@@ -145,8 +111,6 @@ public:
     void SendClientUpdate();
     /// Send queued remote events. Called by Network.
     void SendRemoteEvents();
-    /// Send package files to client. Called by network.
-    void SendPackages();
     /// Process pending latest data for nodes and components.
     void ProcessPendingLatestData();
     /// Process a message from the server or client. Called by Network.
@@ -217,14 +181,6 @@ public:
 
     /// Return an address:port string.
     String ToString() const;
-    /// Return number of package downloads remaining.
-    unsigned GetNumDownloads() const;
-    /// Return name of current package download, or empty if no downloads.
-    const String& GetDownloadName() const;
-    /// Return progress of current package download, or 1.0 if no downloads.
-    float GetDownloadProgress() const;
-    /// Trigger client connection to download a package file from the server. Can be used to download additional resource packages when client is already joined in a scene. The package must have been added as a requirement to the scene the client is joined in, or else the eventual download will fail.
-    void SendPackageToClient(PackageFile* package);
 
     /// Set network simulation parameters. Called by Network.
     void ConfigureNetworkSimulator(int latencyMs, float packetLoss);
@@ -245,8 +201,6 @@ private:
     void ProcessSceneChecksumError(int msgID, MemoryBuffer& msg);
     /// Process a scene update message from the server. Called by Network.
     void ProcessSceneUpdate(int msgID, MemoryBuffer& msg);
-    /// Process package download related messages. Called by Network.
-    void ProcessPackageDownload(int msgID, MemoryBuffer& msg);
     /// Process an Identity message from the client. Called by Network.
     void ProcessIdentity(int msgID, MemoryBuffer& msg);
     /// Process a Controls message from the client. Called by Network.
@@ -261,30 +215,14 @@ private:
     void ProcessNewNode(Node* node);
     /// Process a node that the client has already received.
     void ProcessExistingNode(Node* node, NodeReplicationState& nodeState);
-    /// Process a SyncPackagesInfo message from server.
-    void ProcessPackageInfo(int msgID, MemoryBuffer& msg);
-    /// Check a package list received from server and initiate package downloads as necessary. Return true on success, or false if failed to initialze downloads (cache dir not set)
-    bool RequestNeededPackages(unsigned numPackages, MemoryBuffer& msg);
-    /// Initiate a package download.
-    void RequestPackage(const String& name, unsigned fileSize, unsigned checksum);
-    /// Send an error reply for a package download.
-    void SendPackageError(const String& name);
     /// Handle scene load failure on the server or client.
     void OnSceneLoadFailed();
-    /// Handle a package download failure on the client.
-    void OnPackageDownloadFailed(const String& name);
-    /// Handle all packages loaded successfully. Also called directly on MSG_LOADSCENE if there are none.
-    void OnPackagesReady();
 
     /// Scene.
     WeakPtr<Scene> scene_;
     /// Network replication state of the scene.
     SceneReplicationState sceneState_;
-    /// Waiting or ongoing package file receive transfers.
-    HashMap<StringHash, PackageDownload> downloads_;
-    /// Ongoing package send transfers.
-    HashMap<StringHash, PackageUpload> uploads_;
-    /// Pending latest data for not yet received nodes.
+    /// Ongoing  send transfers.
     HashMap<unsigned, PODVector<unsigned char> > nodeLatestData_;
     /// Pending latest data for not yet received components.
     HashMap<unsigned, PODVector<unsigned char> > componentLatestData_;
@@ -294,7 +232,7 @@ private:
     VectorBuffer msg_;
     /// Queued remote events.
     Vector<RemoteEvent> remoteEvents_;
-    /// Scene file to load once all packages (if any) have been downloaded.
+    /// Scene file to load  (if any) have been downloaded.
     String sceneFileName_;
     /// Statistics timer.
     Timer statsTimer_;

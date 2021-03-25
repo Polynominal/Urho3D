@@ -25,25 +25,17 @@
 #include "../Container/ArrayPtr.h"
 #include "../Core/Object.h"
 #include "../IO/AbstractFile.h"
+#include <physfs/physfs.h>
 
-#ifdef __ANDROID__
-struct SDL_RWops;
-#endif
 
 namespace Urho3D
 {
 
-#ifdef __ANDROID__
-extern const char* APK;
-
-// Macro for checking if a given pathname is inside APK's assets directory
-#define URHO3D_IS_ASSET(p) p.StartsWith(APK)
 // Macro for truncating the APK prefix string from the asset pathname and at the same time patching the directory name components (see custom_rules.xml)
 #ifdef ASSET_DIR_INDICATOR
 #define URHO3D_ASSET(p) p.Substring(5).Replaced("/", ASSET_DIR_INDICATOR "/").CString()
 #else
 #define URHO3D_ASSET(p) p.Substring(5).CString()
-#endif
 #endif
 
 /// File open mode.
@@ -54,7 +46,6 @@ enum FileMode
     FILE_READWRITE
 };
 
-class PackageFile;
 
 /// %File opened either through the filesystem or from within a package file.
 class URHO3D_API File : public Object, public AbstractFile
@@ -66,8 +57,6 @@ public:
     explicit File(Context* context);
     /// Construct and open a filesystem file.
     File(Context* context, const String& fileName, FileMode mode = FILE_READ);
-    /// Construct and open from a package file.
-    File(Context* context, PackageFile* package, const String& fileName);
     /// Destruct. Close the file if open.
     ~File() override;
 
@@ -86,8 +75,6 @@ public:
 
     /// Open a filesystem file. Return true if successful.
     bool Open(const String& fileName, FileMode mode = FILE_READ);
-    /// Open from within a package file. Return true if successful.
-    bool Open(PackageFile* package, const String& fileName);
     /// Close the file.
     void Close();
     /// Flush any buffered output to the file.
@@ -102,7 +89,7 @@ public:
     bool IsOpen() const;
 
     /// Return the file handle.
-    void* GetHandle() const { return handle_; }
+    PHYSFS_File* GetHandle() const { return handle_; }
 
     /// Return whether the file originates from a package.
     bool IsPackaged() const { return offset_ != 0; }
@@ -120,25 +107,11 @@ private:
     /// Open mode.
     FileMode mode_;
     /// File handle.
-    void* handle_;
-#ifdef __ANDROID__
-    /// SDL RWops context for Android asset loading.
-    SDL_RWops* assetHandle_;
-#endif
-    /// Read buffer for Android asset or compressed file loading.
-    SharedArrayPtr<unsigned char> readBuffer_;
-    /// Decompression input buffer for compressed file loading.
-    SharedArrayPtr<unsigned char> inputBuffer_;
+    PHYSFS_File* handle_;
     /// Read buffer position.
-    unsigned readBufferOffset_;
-    /// Bytes in the current read buffer.
-    unsigned readBufferSize_;
-    /// Start position within a package file, 0 for regular files.
     unsigned offset_;
     /// Content checksum.
     unsigned checksum_;
-    /// Compression flag.
-    bool compressed_;
     /// Synchronization needed before read -flag.
     bool readSyncNeeded_;
     /// Synchronization needed before write -flag.

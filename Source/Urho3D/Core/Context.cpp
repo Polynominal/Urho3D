@@ -34,6 +34,8 @@
 #endif
 #endif
 
+#include <physfs/physfs.h>
+
 #include "../DebugNew.h"
 
 namespace Urho3D
@@ -149,6 +151,8 @@ Context::~Context()
     for (PODVector<VariantMap*>::Iterator i = eventDataMaps_.Begin(); i != eventDataMaps_.End(); ++i)
         delete *i;
     eventDataMaps_.Clear();
+
+    if (PHYSFS_isInit()) {PHYSFS_deinit();}
 }
 
 SharedPtr<Object> Context::CreateObject(StringHash objectType)

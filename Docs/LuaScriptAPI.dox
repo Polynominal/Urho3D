@@ -2433,7 +2433,6 @@ Properties:
 
 Methods:
 
-- bool SetCurrentDir(const String pathName)
 - bool CreateDir(const String pathName)
 - void SetExecuteConsoleCommands(bool enable)
 - int SystemCommand(const String commandLine, bool redirectStdOutToLog = false)
@@ -2454,7 +2453,6 @@ Methods:
 - bool DirExists(const String pathName) const
 - const Vector<String>& ScanDir(const String pathName, const String filter, unsigned flags, bool recursive) const
 - String GetProgramDir() const
-- String GetUserDocumentsDir() const
 - String GetAppPreferencesDir(const String org, const String app) const
 - String GetTemporaryDir() const
 

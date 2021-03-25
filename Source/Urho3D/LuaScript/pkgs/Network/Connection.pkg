@@ -12,13 +12,13 @@ class Connection : public Object
 {
     void SendMessage(int msgID, bool reliable, bool inOrder, const VectorBuffer& msg, unsigned contentID = 0);
 
-    
+
     void SendRemoteEvent(StringHash eventType, bool inOrder, const VariantMap& eventData = Variant::emptyVariantMap);
     void SendRemoteEvent(const String eventType, bool inOrder, const VariantMap& eventData = Variant::emptyVariantMap);
-    
+
     void SendRemoteEvent(Node* node, StringHash eventType, bool inOrder, const VariantMap& eventData = Variant::emptyVariantMap);
     void SendRemoteEvent(Node* node, const String eventType, bool inOrder, const VariantMap& eventData = Variant::emptyVariantMap);
-    
+
     void SetScene(Scene* newScene);
     void SetIdentity(const VariantMap& identity);
     void SetControls(const Controls& newControls);
@@ -27,7 +27,6 @@ class Connection : public Object
     void SetConnectPending(bool connectPending);
     void SetLogStatistics(bool enable);
     void Disconnect(int waitMSec = 0);
-    void SendPackageToClient(PackageFile* package);
 
     VariantMap& GetIdentity();
     Scene* GetScene() const;
@@ -49,9 +48,6 @@ class Connection : public Object
     int GetPacketsInPerSec() const;
     int GetPacketsOutPerSec() const;
     String ToString() const;
-    unsigned GetNumDownloads() const;
-    const String GetDownloadName() const;
-    float GetDownloadProgress() const;
 
     tolua_property__get_set VariantMap& identity;
     tolua_property__get_set Scene* scene;
@@ -72,7 +68,4 @@ class Connection : public Object
     tolua_readonly tolua_property__get_set float bytesOutPerSec;
     tolua_readonly tolua_property__get_set float packetsInPerSec;
     tolua_readonly tolua_property__get_set float packetsOutPerSec;
-    tolua_readonly tolua_property__get_set unsigned numDownloads;
-    tolua_readonly tolua_property__get_set String downloadName;
-    tolua_readonly tolua_property__get_set float downloadProgress;
 };

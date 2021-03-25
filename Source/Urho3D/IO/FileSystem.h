@@ -26,6 +26,9 @@
 #include "../Container/List.h"
 #include "../Core/Object.h"
 
+#include <physfs/physfs.h>
+#include <queue>
+
 namespace Urho3D
 {
 
@@ -44,13 +47,25 @@ class URHO3D_API FileSystem : public Object
     URHO3D_OBJECT(FileSystem, Object);
 
 public:
+
     /// Construct.
     explicit FileSystem(Context* context);
     /// Destruct.
     ~FileSystem() override;
 
-    /// Set the current working directory.
-    bool SetCurrentDir(const String& pathName);
+
+    //The untouchables
+    void PermitSymLinks();
+    //
+
+    bool LoadIdentity(const String& organization,const String& appName);
+    bool MountArchive(const String& fileName, const String& mountPoint, bool append);
+    bool UnmountArchive(const String& fileName);
+    String GetMountPoint(const String& dirName);
+    String GetSearchPaths();
+    String GetRealFileDir(const String& fileName);
+
+
     /// Create a directory.
     bool CreateDir(const String& pathName);
     /// Set whether to execute engine console commands as OS-specific system command.
@@ -73,9 +88,6 @@ public:
     bool Delete(const String& fileName);
     /// Register a path as allowed to access. If no paths are registered, all are allowed. Registering allowed paths is considered securing the Urho3D execution environment: running programs and opening files externally through the system will fail afterward.
     void RegisterPath(const String& pathName);
-    /// Set a file's last modified time as seconds since 1.1.1970. Return true on success.
-    bool SetLastModifiedTime(const String& fileName, unsigned newTime);
-
     /// Return the absolute current working directory.
     String GetCurrentDir() const;
 
@@ -97,10 +109,9 @@ public:
     void ScanDir(Vector<String>& result, const String& pathName, const String& filter, unsigned flags, bool recursive) const;
     /// Return the program's directory.
     String GetProgramDir() const;
-    /// Return the user documents directory.
-    String GetUserDocumentsDir() const;
     /// Return the application preferences directory.
     String GetAppPreferencesDir(const String& org, const String& app) const;
+
     /// Return path of temporary directory. Path always ends with a forward slash.
     String GetTemporaryDir() const;
 
@@ -149,6 +160,5 @@ URHO3D_API String GetNativePath(const String& pathName);
 /// Convert a path to the format required by the operating system in wide characters.
 URHO3D_API WString GetWideNativePath(const String& pathName);
 /// Return whether a path is absolute.
-URHO3D_API bool IsAbsolutePath(const String& pathName);
 
 }

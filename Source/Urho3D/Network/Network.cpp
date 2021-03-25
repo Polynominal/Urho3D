@@ -53,7 +53,7 @@ namespace Urho3D
 {
 
 static const char* RAKNET_MESSAGEID_STRINGS[] = {
-    "ID_CONNECTED_PING",  
+    "ID_CONNECTED_PING",
     "ID_UNCONNECTED_PING",
     "ID_UNCONNECTED_PING_OPEN_CONNECTIONS",
     "ID_CONNECTED_PONG",
@@ -433,7 +433,7 @@ bool Network::StartServer(unsigned short port)
         return true;
 
     URHO3D_PROFILE(StartServer);
-    
+
     SLNet::SocketDescriptor socket;//(port, AF_INET);
     socket.port = port;
     socket.socketFamily = AF_INET;
@@ -527,7 +527,7 @@ void Network::BroadcastMessage(int msgID, bool reliable, bool inOrder, const Vec
 void Network::BroadcastMessage(int msgID, bool reliable, bool inOrder, const unsigned char* data, unsigned numBytes,
     unsigned contentID)
 {
-    if (!rakPeer_) 
+    if (!rakPeer_)
         return;
     /* Make sure not to use SLikeNet(RakNet) internal message ID's
      and since RakNet uses 1 byte message ID's, they cannot exceed 255 limit */
@@ -630,26 +630,6 @@ void Network::SetPackageCacheDir(const String& path)
     packageCacheDir_ = AddTrailingSlash(path);
 }
 
-void Network::SendPackageToClients(Scene* scene, PackageFile* package)
-{
-    if (!scene)
-    {
-        URHO3D_LOGERROR("Null scene specified for SendPackageToClients");
-        return;
-    }
-    if (!package)
-    {
-        URHO3D_LOGERROR("Null package specified for SendPackageToClients");
-        return;
-    }
-
-    for (HashMap<SLNet::AddressOrGUID, SharedPtr<Connection> >::Iterator i = clientConnections_.Begin();
-         i != clientConnections_.End(); ++i)
-    {
-        if (i->second_->GetScene() == scene)
-            i->second_->SendPackageToClient(package);
-    }
-}
 
 SharedPtr<HttpRequest> Network::MakeHttpRequest(const String& url, const String& verb, const Vector<String>& headers,
     const String& postData)
@@ -853,7 +833,7 @@ void Network::HandleIncomingPacket(SLNet::Packet* packet, bool isServer)
         if (!isServer)
         {
             using namespace NetworkHostDiscovered;
-            
+
             dataStart += sizeof(SLNet::TimeMS);
             VariantMap& eventMap = context_->GetEventDataMap();
             if (packet->length > packet->length - dataStart) {
@@ -964,7 +944,6 @@ void Network::PostUpdate(float timeStep)
                 {
                     i->second_->SendServerUpdate();
                     i->second_->SendRemoteEvents();
-                    i->second_->SendPackages();
                 }
             }
         }
