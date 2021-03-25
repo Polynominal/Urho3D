@@ -64,7 +64,7 @@ public:
     String GetMountPoint(const String& dirName);
     String GetSearchPaths();
     String GetRealFileDir(const String& fileName);
-
+    String GetWriteDirectory();
 
     /// Create a directory.
     bool CreateDir(const String& pathName);

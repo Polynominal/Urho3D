@@ -12,7 +12,8 @@ class FileSystem : public Object
     String GetMountPoint(const String& dirName);
     String GetSearchPaths();
     String GetRealFileDir(const String& fileName);
-
+    String GetWriteDirectory();
+    
     bool CreateDir(const String pathName);
     void SetExecuteConsoleCommands(bool enable);
     int SystemCommand(const String commandLine, bool redirectStdOutToLog = false);

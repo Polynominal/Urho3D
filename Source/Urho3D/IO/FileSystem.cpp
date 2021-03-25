@@ -311,6 +311,11 @@ String FileSystem::GetSearchPaths()
     PHYSFS_freeList(*i);
     return output;
 }
+String FileSystem::GetWriteDirectory()
+{
+    return String(PHYSFS_getWriteDir());
+
+}
 bool FileSystem::LoadIdentity(const String& organization,const String& appName)
 {
     const char *prefdir = PHYSFS_getPrefDir(organization.CString(), appName.CString());
@@ -739,17 +744,20 @@ void FileSystem::ScanDirInternal(Vector<String>& result, String path, const Stri
     if (filterExtension.Contains('*'))
         filterExtension.Clear();
 
-    char **array = PHYSFS_enumerateFiles(GetNativePath(path).CString());
-    char **i;
-    for (i = array; *i != nullptr; i++)
+    path = GetNativePath(path);
+    char **array = PHYSFS_enumerateFiles(path.CString());
+    for (char **i = array; *i != 0; i++)
     {
-        String fileName(*i);
+        String fileName = String(*i);
         if (fileName.StartsWith(".") && !(flags & SCAN_HIDDEN))
+        {
             continue;
+        }
 
-        String pathAndName = path + fileName;
+
+        String pathAndName = path + "/" + fileName;
         PHYSFS_Stat stat = {};
-        if (PHYSFS_stat(fileName.CString(),&stat))
+        if (PHYSFS_stat(pathAndName.CString(),&stat))
         {
             if (stat.filetype == PHYSFS_FILETYPE_DIRECTORY)
             {
