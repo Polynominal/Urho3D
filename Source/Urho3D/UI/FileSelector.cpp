@@ -195,7 +195,7 @@ void FileSelector::SetPath(const String& path)
     auto* fileSystem = GetSubsystem<FileSystem>();
     if (fileSystem->DirExists(path))
     {
-        path_ = AddTrailingSlash(path);
+        path_ = path;
         SetLineEditText(pathEdit_, path_);
         RefreshFiles();
     }

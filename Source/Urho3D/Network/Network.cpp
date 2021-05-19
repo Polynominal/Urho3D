@@ -627,7 +627,7 @@ void Network::UnregisterAllRemoteEvents()
 
 void Network::SetPackageCacheDir(const String& path)
 {
-    packageCacheDir_ = AddTrailingSlash(path);
+    packageCacheDir_ = path;
 }
 
 

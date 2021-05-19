@@ -40,6 +40,9 @@
 #include <Urho3D/DebugNew.h>
 #include <vector>
 #include <iostream>
+#include <signal.h>
+#include <exception>
+#include <stdexcept>
 
 URHO3D_DEFINE_APPLICATION_MAIN(Urho3DPlayer);
 
@@ -71,6 +74,7 @@ void Urho3DPlayer::Setup()
 
     auto luaScriptTemp = new LuaScript(context_);
 
+    auto luaFileSetup = Engine::GetParameter(engineParameters_,"setup");
 
     //these here are default best settings.
     engineParameters_["SoundBuffer"] = 10;
@@ -131,7 +135,18 @@ void Urho3DPlayer::Setup()
         "WorkerThreads"
     };
 
-    bool fileOk = luaScriptTemp->ExecuteFile("setup.lua");
+    bool fileOk;
+    std::cout << "setup: " << engineParameters_["setup"].GetString().CString() << std::endl;
+    if (luaFileSetup.IsEmpty())
+    {
+        std::cout << "LOADING DEFAULT SETUP" << std::endl;
+        fileOk = luaScriptTemp->ExecuteFile("setup.lua");
+    }
+    else{
+        std::cout << "LOADING CUSTOM SETUP" << std::endl;
+        fileOk = luaScriptTemp->ExecuteFile(luaFileSetup.GetString());
+    }
+
 
     if (fileOk)
     {
@@ -252,6 +267,8 @@ void Urho3DPlayer::Setup()
 
 }
 
+static LuaScript* mainScript;
+
 void Urho3DPlayer::Start()
 {
     // Reattempt reading the command line from the resource system now if not read before
@@ -307,10 +324,41 @@ void Urho3DPlayer::Start()
     else
     {
 #ifdef URHO3D_LUA
+        static const char* lua_code = "local trace = debug.traceback(); print(trace); GetLog():Write(1,trace);";
         // Instantiate and register the Lua script subsystem
         auto* luaScript = new LuaScript(context_);
+        mainScript = luaScript;
+        static int signaled=0;
         context_->RegisterSubsystem(luaScript);
+        signal(SIGSEGV,[](int id)
+        {
+            if (signaled > 0)
+            {
+                return;
+            }
+            signaled++;
 
+            std::cout << "SIGNAL SEG FAULT RECIEVED " << std::endl;
+            mainScript->ExecuteString(lua_code);
+            exit(-1);
+        });
+        // signal(SIGUNUSED,[](int id)
+        // {
+        //     std::cout << "SIGNAL UNUSED / BUS FAULT RECIEVED " << std::endl;
+        //     mainScript->ExecuteString("print(debug.traceback())");
+        // });
+        signal(SIGILL,[](int id)
+        {
+            if (signaled > 0)
+            {
+                return;
+            }
+            signaled++;
+
+            std::cout << "SIGNAL ILL FAULT RECIEVED " << std::endl;
+            mainScript->ExecuteString(lua_code);
+            exit(-1);
+        });
         // If script loading is successful, proceed to main loop
         if (luaScript->ExecuteFile(scriptFileName_))
         {

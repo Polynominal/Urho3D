@@ -280,7 +280,7 @@ bool LuaScript::LoadRawFile(const String& fileName)
         URHO3D_LOGINFO("Lua file not found: " + fileName);
         return false;
     }
-    filePath = GetNativePath(filePath);
+    filePath = filePath;
     URHO3D_LOGINFO("Loading Lua file from file system: " + filePath);
 
     SharedPtr<File> srcFile(new File(context_, filePath, FILE_READ));

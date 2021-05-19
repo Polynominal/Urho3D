@@ -19,7 +19,6 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 //
-
 #include "../Precompiled.h"
 #include "../Audio/Audio.h"
 #include "../Core/Context.h"
@@ -999,6 +998,9 @@ VariantMap Engine::ParseParameters(const Vector<String>& arguments)
                 ++i;
             }
 #endif
+            else {
+                ret[argument] = value;
+            }
         }
     }
 

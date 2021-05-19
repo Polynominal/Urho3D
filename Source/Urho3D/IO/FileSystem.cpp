@@ -19,6 +19,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 //
+#include <filesystem>
 
 #include "../Precompiled.h"
 
@@ -435,18 +436,24 @@ bool FileSystem::CreateDir(const String& pathName)
     }
 
     // Create each of the parents if necessary
-    String parentPath = GetParentPath(pathName);
-    if (parentPath.Length() > 1 && !DirExists(parentPath))
+    std::filesystem::path cpp_path(pathName.CString());
+    if (cpp_path.has_parent_path())
     {
-        if (!CreateDir(parentPath))
-            return false;
+        String parentPath = String(cpp_path.parent_path().relative_path().c_str());
+        if (!DirExists(parentPath))
+        {
+            URHO3D_LOGINFOF("Creating child directory: \"%s\"",parentPath);
+            if (!CreateDir(parentPath))
+                return false;
+        }
+
     }
 
-    String path = GetNativePath(RemoveTrailingSlash(pathName));
+    String path = pathName;
     bool success = PHYSFS_mkdir(path.CString());
     if (success)
     {
-        URHO3D_LOGDEBUG("Created directory " + path);
+        // URHO3D_LOGDEBUG("Created directory " + path);
     }
     else
     {
@@ -600,7 +607,7 @@ bool FileSystem::Delete(const String& fileName)
         LogErrorPHYSFS("Failed to delete file",fileName);
         return true;
     }
-    return false;
+    return true;
 }
 
 String FileSystem::GetCurrentDir() const
@@ -610,7 +617,7 @@ String FileSystem::GetCurrentDir() const
 
 bool FileSystem::CheckAccess(const String& pathName) const
 {
-    String fixedPath = AddTrailingSlash(pathName);
+    String fixedPath = pathName;
 
     // If no allowed directories defined, succeed always
     if (allowedPaths_.Empty())
@@ -679,7 +686,7 @@ bool FileSystem::DirExists(const String& pathName) const
     if (!CheckAccess(pathName))
         return false;
 
-    String fileName = GetNativePath(RemoveTrailingSlash(pathName));
+    String fileName = pathName;
 
     PHYSFS_Stat stat = {};
     if (PHYSFS_stat(fileName.CString(),&stat))
@@ -697,7 +704,7 @@ void FileSystem::ScanDir(Vector<String>& result, const String& pathName, const S
 
     if (CheckAccess(pathName))
     {
-        String initialPath = AddTrailingSlash(pathName);
+        String initialPath = pathName;
         ScanDirInternal(result, initialPath, initialPath, filter, flags, recursive);
     }
 }
@@ -720,7 +727,7 @@ void FileSystem::RegisterPath(const String& pathName)
     if (pathName.Empty())
         return;
 
-    allowedPaths_.Insert(AddTrailingSlash(pathName));
+    allowedPaths_.Insert(pathName);
 }
 
 String FileSystem::GetRealFileDir(const String& fileName)
@@ -735,7 +742,7 @@ String FileSystem::GetRealFileDir(const String& fileName)
 void FileSystem::ScanDirInternal(Vector<String>& result, String path, const String& startPath,
     const String& filter, unsigned flags, bool recursive) const
 {
-    path = AddTrailingSlash(path);
+    path = path;
     String deltaPath;
     if (path.Length() > startPath.Length())
         deltaPath = path.Substring(startPath.Length());
@@ -744,7 +751,7 @@ void FileSystem::ScanDirInternal(Vector<String>& result, String path, const Stri
     if (filterExtension.Contains('*'))
         filterExtension.Clear();
 
-    path = GetNativePath(path);
+    path = path;
     char **array = PHYSFS_enumerateFiles(path.CString());
     for (char **i = array; *i != 0; i++)
     {
@@ -931,13 +938,13 @@ String FileSystem::GetTemporaryDir() const
     wchar_t pathName[MAX_PATH];
     pathName[0] = 0;
     GetTempPathW(SDL_arraysize(pathName), pathName);
-    return AddTrailingSlash(String(pathName));
+    return String(pathName);
 #endif
 #else
     if (char* pathName = getenv("TMPDIR"))
-        return AddTrailingSlash(pathName);
+        return pathName;
 #ifdef P_tmpdir
-    return AddTrailingSlash(P_tmpdir);
+    return P_tmpdir;
 #else
     return "/tmp/";
 #endif

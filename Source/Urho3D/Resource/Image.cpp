@@ -1268,7 +1268,7 @@ bool Image::SaveTGA(const String& fileName) const
     }
 
     if (data_)
-        return stbi_write_tga(GetNativePath(fileName).CString(), width_, height_, components_, data_.Get()) != 0;
+        return stbi_write_tga(fileName.CString(), width_, height_, components_, data_.Get()) != 0;
     else
         return false;
 }
@@ -1291,7 +1291,7 @@ bool Image::SaveJPG(const String& fileName, int quality) const
     }
 
     if (data_)
-        return stbi_write_jpg(GetNativePath(fileName).CString(), width_, height_, components_, data_.Get(), quality) != 0;
+        return stbi_write_jpg(fileName.CString(), width_, height_, components_, data_.Get(), quality) != 0;
     else
         return false;
 }

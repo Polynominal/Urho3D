@@ -1,8 +1,8 @@
 <renderpath>
     <rendertarget name="blurh" tag="DepthOfFieldMQ" sizedivisor="4 4" format="rgba" filter="true"/>
     <rendertarget name="blurv" tag="DepthOfFieldMQ" sizedivisor="4 4" format="rgba" filter="true"/>
-    <rendertarget name="blurh" tag="DepthOfFieldHQ" sizedivisor="2 2" format="rgba" filter="true"/>
-    <rendertarget name="blurv" tag="DepthOfFieldHQ" sizedivisor="2 2" format="rgba" filter="true"/>
+    <rendertarget name="blurh" tag="DepthOfFieldHQ" sizedivisor="4 4" format="rgba" filter="true"/>
+    <rendertarget name="blurv" tag="DepthOfFieldHQ" sizedivisor="4 4" format="rgba" filter="true"/>
 
     <rendertarget name="depthBlur" tag="DepthOfField" sizedivisor="1 1" format="r16" filter="true"/>
     <rendertarget name="framecopy" tag="DepthOfField" sizedivisor="1 1" format="rgba" filter="true"/>
